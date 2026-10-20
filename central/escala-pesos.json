@@ -1,0 +1,72 @@
+{
+ "v": 1,
+ "pesos": {
+  "carga": 35,
+  "dados": 25,
+  "estado": 20,
+  "custo": 10,
+  "manutencao": 10
+ },
+ "curva": 0.99,
+ "alvos": {
+  "p95ms": 800,
+  "errosMax": 0.01,
+  "linhasPorArquivo": 800,
+  "fanInSemTeste": 5
+ },
+ "tabelasQueCrescem": [],
+ "alvos_repos": {
+  "meu-app": {
+   "repo": "~/Projects/meu-app",
+   "alias": {
+    "js": "src"
+   },
+   "drizzle": "src/lib/schema.ts",
+   "migrations": {
+    "repo": "~/Projects/meu-app",
+    "path": "migrations"
+   },
+   "stack": {
+    "repo": "~/Projects/meu-app",
+    "path": "deploy/stack.yml"
+   },
+   "incluir": [
+    "src"
+   ]
+  }
+ },
+ "carga": {
+  "degraus": [
+   1,
+   2,
+   5,
+   10
+  ],
+  "usuariosBase": 5,
+  "segundosPorDegrau": 20,
+  "segundosMaxPorDegrau": 300,
+  "fatorMax": 10,
+  "alvos": {
+   "meu-app": {
+    "base": "https://dev.exemplo.com",
+    "fluxos": [
+     {
+      "nome": "healthz",
+      "caminho": "/api/healthz"
+     },
+     {
+      "nome": "página de login",
+      "caminho": "/login"
+     }
+    ]
+   }
+  },
+  "hostsDev": [
+   "dev.exemplo.com"
+  ]
+ },
+ "tabelasQueNaoCrescem": [
+  "plans",
+  "settings"
+ ]
+}

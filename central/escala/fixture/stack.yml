@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  web:
+    image: x/web:latest
+  arquivos:
+    image: x/arquivos:latest
+    volumes:
+      - dados_arquivos:/var/dados
+volumes:
+  dados_arquivos:

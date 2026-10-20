@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritório · Segundo Cérebro</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* identidade UPTOΛI — mesmos tokens da Central (central/index.html) */
+:root {
+  --fundo: #070A1F;
+  --fundo-2: #0B0F2A;
+  --superficie: #131632;
+  --superficie-2: #1A1E40;
+  --superficie-3: #2C3260;
+  --tinta: #E8EBF5;
+  --tinta-2: #A9B0CC;
+  --tinta-3: #7F87AA;
+  --linha: #1F2448;
+  --linha-2: #2C3260;
+  --azul: #5B7FFF;
+  --azul-forte: #1E50FF;
+  --foco: #5B7FFF;
+  --acento: #5B7FFF;
+  --acento-suave: rgba(30, 80, 255, .14);
+  --anel-foco: rgba(91, 127, 255, .28);
+  --marca: rgba(91, 127, 255, .32);
+  --acao: linear-gradient(100deg, #9540F4, #F739C9);
+  --sobre-acao: #FFFFFF;
+  --area-projetos: #3DD68C;
+  --area-notas: #F739C9;
+  --area-skills: #9DB2FF;
+  --area-memoria: #A98BFF;
+  --area-artefatos: #7B5CFF;
+  --area-rotinas: #F2C661;
+  --area-nucleo: #E8EBF5;
+  --aresta: rgba(169, 176, 204, .12);
+  --sombra: 0 1px 2px rgba(2,4,16,.5), 0 6px 20px rgba(2,4,16,.45);
+  --raio: 10px;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --titulo: "Inter", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--fundo); color: var(--tinta); font: 14px/1.45 var(--sans); display: flex; flex-direction: column; }
+body { border-top: 1px solid var(--linha-2); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--linha); background: var(--fundo); }
+.marca { display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.marca svg { color: var(--azul); flex: none; }
+.marca b { font-family: var(--titulo); font-weight: 700; letter-spacing: .14em; font-size: 15px; }
+.marca span { font-weight: 400; letter-spacing: .14em; color: var(--tinta-2); font-size: 15px; }
+.marca small { display: block; color: var(--azul); font-family: var(--mono); font-weight: 500; font-size: 10.5px; letter-spacing: .06em; margin-top: 1px; }
+.busca { flex: 1 1 280px; position: relative; }
+.busca input, .menu input[type="search"] { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--superficie); font-size: 14px; }
+.busca input:focus, .menu input[type="search"]:focus { border-color: var(--azul); outline: none; box-shadow: 0 0 0 3px var(--anel-foco); }
+.busca svg { position: absolute; left: 10px; top: 50%; translate: 0 -50%; color: var(--tinta-3); }
+.busca kbd { position: absolute; right: 10px; top: 50%; translate: 0 -50%; }
+kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--linha); border-radius: 4px; color: var(--tinta-3); background: var(--superficie); }
+.abas { display: flex; gap: 2px; background: var(--superficie); border: 1px solid var(--linha); padding: 3px; border-radius: var(--raio); }
+.abas button { border: 0; background: transparent; padding: 5px 12px; border-radius: 7px; cursor: pointer; color: var(--tinta-2); font-weight: 600; }
+.abas button[aria-selected="true"] { background: var(--acao); color: var(--sobre-acao); }
+.btn-os { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; background: var(--superficie-2); color: var(--tinta); border: 1px solid var(--linha-2); border-radius: var(--raio); font-weight: 600; letter-spacing: .06em; font-size: 12.5px; text-decoration: none; cursor: pointer; white-space: nowrap; transition: border-color .15s ease-out, background-color .15s ease-out; }
+.btn-os:hover { border-color: var(--azul); background: var(--superficie-3); }
+.btn-os:active { background: var(--superficie); }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--linha); background: var(--fundo); }
+.chip { border: 1px solid var(--linha); background: var(--superficie); border-radius: 999px; padding: 4px 11px 4px 9px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; color: var(--tinta-2); }
+.chip .bola { width: 8px; height: 8px; border-radius: 50%; }
+.chip .n { color: var(--tinta-3); font-variant-numeric: tabular-nums; font-size: 12px; }
+.chip[aria-pressed="true"] { border-color: var(--azul); color: var(--tinta); background: var(--superficie-2); font-weight: 600; }
+.filtros select { border: 1px solid var(--linha); border-radius: 8px; padding: 4px 8px; background: var(--superficie); }
+.filtros .info { margin-left: auto; color: var(--tinta-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.filtro-depto { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--azul); color: var(--tinta); background: var(--acento-suave); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12px; font-weight: 600; }
+.filtro-depto button { border: 0; background: transparent; cursor: pointer; color: var(--tinta-2); padding: 0 6px; font-size: 14px; }
+
+main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; position: relative; }
+.vista { min-height: 0; overflow: auto; position: relative; }
+.vista[hidden] { display: none; }
+
+/* lista */
+.lista { list-style: none; margin: 0; padding: 8px; }
+.linha-item { display: grid; grid-template-columns: 10px minmax(0,1fr) auto; gap: 10px; align-items: start; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.linha-item:hover { background: var(--superficie); }
+.linha-item[aria-current="true"] { background: var(--acento-suave); box-shadow: inset 2px 0 0 var(--azul); }
+.linha-item .bola { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; box-shadow: 0 0 8px currentColor; }
+.linha-item .tit { font-weight: 560; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linha-item .cam { font: 12px var(--mono); color: var(--tinta-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linha-item .meta { font-size: 12px; color: var(--tinta-3); text-align: right; white-space: nowrap; }
+.linha-item .tipo { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--superficie-2); color: var(--tinta-2); margin-bottom: 2px; }
+mark { background: var(--marca); color: inherit; border-radius: 2px; }
+.mais { display: block; margin: 8px auto 24px; }
+.vazio { padding: 48px 16px; text-align: center; color: var(--tinta-3); }
+
+/* mapa */
+#vGrafo { overflow: hidden; background: var(--fundo); }
+#tela { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+#tela.arrastando, #aneis.arrastando { cursor: grabbing; }
+.grafo-ctl { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 6px 8px; box-shadow: var(--sombra); font-size: 12px; color: var(--tinta-2); }
+.grafo-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.icone-btn { border: 1px solid var(--linha); background: var(--superficie-2); border-radius: 8px; padding: 4px 9px; cursor: pointer; color: var(--tinta-2); }
+.dica { position: absolute; pointer-events: none; background: rgba(19,22,50,.96); border: 1px solid var(--linha); color: var(--tinta); font-size: 12px; padding: 5px 9px; border-radius: 7px; white-space: nowrap; max-width: 380px; overflow: hidden; text-overflow: ellipsis; box-shadow: var(--sombra); z-index: 3; }
+.dica b { display: block; font-weight: 700; }
+.dica span { color: var(--tinta-3); font-size: 11px; }
+.legenda { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 12px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 6px 10px; font-size: 12px; color: var(--tinta-2); }
+.legenda span { display: inline-flex; align-items: center; gap: 5px; }
+.legenda i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+/* anéis */
+#vAneis { overflow: hidden; background: radial-gradient(ellipse at 50% 52%, var(--fundo-2) 0%, var(--fundo) 62%); }
+#aneis { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; position: relative; z-index: 1; }
+#camadasA { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; z-index: 0; }
+#camadasA canvas { position: absolute; will-change: transform; }
+#camadasA canvas[hidden] { display: none; }
+.topo-aneis { position: absolute; top: 14px; right: 16px; display: flex; gap: 12px; z-index: 2; }
+.menu { position: absolute; top: 62px; right: 16px; width: 290px; max-height: calc(100% - 80px); overflow: auto; background: rgba(11,15,42,.94); border: 1px solid var(--linha); border-radius: 14px; padding: 14px; box-shadow: var(--sombra); z-index: 2; font-size: 13px; }
+.menu[hidden] { display: none; }
+.menu .busca-m { position: relative; }
+.menu .busca-m svg { position: absolute; left: 10px; top: 50%; translate: 0 -50%; color: var(--tinta-3); }
+.menu h5 { margin: 14px 0 6px; font-size: 10.5px; letter-spacing: .16em; color: var(--tinta-3); font-weight: 700; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.seg button { border: 1px solid var(--linha); background: var(--superficie-2); border-radius: 8px; padding: 6px 4px; cursor: pointer; color: var(--tinta-2); font-weight: 600; font-size: 12.5px; }
+.seg button[aria-pressed="true"] { background: var(--acento-suave); color: var(--tinta); border-color: var(--azul); }
+.menu .linha-ctl { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: var(--tinta-2); }
+.menu .linha-ctl output { color: var(--azul); font-variant-numeric: tabular-nums; font-weight: 600; }
+.menu input[type="range"] { width: 100%; accent-color: var(--azul); margin: 6px 0 0; }
+.menu label.ck { display: flex; gap: 8px; align-items: center; margin-top: 10px; cursor: pointer; color: var(--tinta-2); }
+.menu input[type="checkbox"] { accent-color: var(--azul); width: 15px; height: 15px; }
+.menu .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
+.menu .dupla button { border: 1px solid var(--linha); background: var(--superficie-2); border-radius: 8px; padding: 7px 4px; cursor: pointer; color: var(--tinta); font-weight: 600; font-size: 12.5px; }
+.menu .dupla button:hover { border-color: var(--tinta-3); }
+.menu .nota { margin-top: 12px; color: var(--tinta-3); font-size: 11.5px; line-height: 1.5; }
+.camadas { position: absolute; left: 16px; bottom: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; letter-spacing: .08em; color: var(--tinta-3); z-index: 1; pointer-events: none; }
+.camadas span { display: inline-flex; gap: 7px; align-items: center; }
+.camadas i { width: 14px; height: 2px; display: inline-block; border-radius: 2px; }
+.camadas b { color: var(--tinta-2); font-weight: 700; }
+
+/* projetos */
+.projetos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; padding: 14px; }
+.card { border: 1px solid var(--linha); background: var(--superficie); border-radius: var(--raio); padding: 12px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.card:hover { border-color: var(--tinta-3); }
+.card[aria-pressed="true"] { border-color: var(--azul); box-shadow: 0 0 0 2px var(--acento-suave); }
+.card h3 { margin: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .barras { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--superficie-2); }
+.card .num { font-size: 12px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.arvore { padding: 0 14px 24px; }
+.arvore h2 { font-size: 15px; margin: 6px 0 10px; }
+.arvore details { border-left: 1px solid var(--linha); margin-left: 6px; padding-left: 10px; }
+.arvore summary { cursor: pointer; padding: 3px 0; color: var(--tinta-2); font: 12.5px var(--mono); }
+.arvore summary .n { color: var(--tinta-3); }
+.arvore .folha { padding: 3px 6px; border-radius: 6px; cursor: pointer; display: flex; gap: 8px; justify-content: space-between; }
+.arvore .folha:hover { background: var(--superficie-2); }
+.arvore .folha small { color: var(--tinta-3); white-space: nowrap; }
+
+/* painel de detalhe */
+aside { border-left: 1px solid var(--linha); background: var(--superficie); overflow: auto; padding: 18px; min-height: 0; position: relative; }
+aside h2 { font-weight: 650; margin: 6px 0 4px; font-size: 17px; line-height: 1.3; word-break: break-word; }
+aside .rotulos { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; padding-right: 26px; }
+aside .rotulo { padding: 1px 8px; border-radius: 999px; background: var(--superficie-2); color: var(--tinta-2); }
+.fechar { position: absolute; top: 12px; right: 12px; border: 1px solid var(--linha); background: var(--superficie-2); border-radius: 7px; width: 26px; height: 26px; cursor: pointer; color: var(--tinta-2); line-height: 1; }
+.caminho { margin: 14px 0 8px; font: 12px/1.5 var(--mono); background: var(--fundo); border: 1px solid var(--linha); padding: 8px 10px; border-radius: 8px; word-break: break-all; user-select: all; }
+.acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--linha); background: var(--superficie-2); padding: 6px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; color: var(--tinta); display: inline-flex; gap: 6px; align-items: center; }
+.btn.prim { background: var(--acao); border-color: transparent; color: var(--sobre-acao); font-weight: 600; }
+.preview { margin-top: 16px; color: var(--tinta-2); white-space: pre-wrap; word-break: break-word; }
+aside h4 { margin: 18px 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--tinta-3); }
+.ligacoes { list-style: none; margin: 0; padding: 0; }
+.ligacoes li { padding: 4px 6px; border-radius: 6px; cursor: pointer; color: var(--azul); }
+.ligacoes li:hover { background: var(--superficie-2); }
+.vazio-painel { color: var(--tinta-3); padding-top: 40px; text-align: center; }
+.vazio-painel p { margin: 6px 0; }
+
+/* vista anéis: tela cheia, detalhe vira gaveta flutuante à esquerda */
+body.v-aneis .filtros, body.v-aneis header .busca { display: none; }
+body.v-aneis main { grid-template-columns: minmax(0, 1fr); }
+body.v-aneis aside { position: absolute; left: 16px; top: 16px; width: 360px; max-height: calc(100% - 70px); border: 1px solid var(--linha); border-radius: 14px; box-shadow: var(--sombra); background: rgba(19,22,50,.96); z-index: 2; }
+body.v-aneis:not(.tem-sel) aside { display: none; }
+body:not(.v-aneis) .fechar { display: none; }
+
+footer { padding: 7px 16px; border-top: 1px solid var(--linha); background: var(--fundo); color: var(--tinta-3); font-size: 12px; }
+footer code { font-family: var(--mono); color: var(--tinta-2); }
+.toast { position: fixed; bottom: 46px; left: 50%; translate: -50% 0; background: var(--tinta); color: var(--fundo); padding: 6px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 9; }
+.toast.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .btn-os, .toast { transition: none; } }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  aside { border-left: 0; border-top: 1px solid var(--linha); max-height: 45vh; }
+  body.v-aneis aside { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 50%; }
+  .menu { width: calc(100% - 32px); }
+  .linha-item .meta { display: none; }
+  .linha-item { grid-template-columns: 10px minmax(0,1fr); }
+  .marca span { display: none; }
+}
+</style>
+</head>
+<body class="v-aneis">
+<header>
+  <div class="marca">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" opacity=".7"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>
+    <div><b>ESCRITÓRIO</b> <span>· SEGUNDO CÉREBRO</span><small>Central de Agentes</small></div>
+  </div>
+  <div class="busca">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Buscar por título, caminho ou descrição…" autocomplete="off" aria-label="Buscar">
+    <kbd>/</kbd>
+  </div>
+  <div class="abas" role="tablist">
+    <button role="tab" data-vista="aneis" aria-selected="true">Anéis</button>
+    <button role="tab" data-vista="lista" aria-selected="false">Lista</button>
+    <button role="tab" data-vista="grafo" aria-selected="false">Mapa</button>
+    <button role="tab" data-vista="projetos" aria-selected="false">Projetos</button>
+  </div>
+  <a class="btn-os" href="http://127.0.0.1:4747/">← VOLTAR PARA O OS</a>
+</header>
+<div class="filtros">
+  <div id="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  <select id="tipo" aria-label="Filtrar por tipo"><option value="">todos os tipos</option></select>
+  <select id="ordem" aria-label="Ordenar">
+    <option value="rel">mais relevante</option>
+    <option value="rec">mexido recentemente</option>
+    <option value="nome">nome (A–Z)</option>
+  </select>
+  <span id="filtroDepto"></span>
+  <span class="info" id="info"></span>
+</div>
+<main>
+  <section class="vista" id="vAneis">
+    <div id="camadasA" aria-hidden="true"><canvas id="lCampo"></canvas><canvas id="lHex"></canvas><canvas id="lMem"></canvas><canvas id="lSkills"></canvas></div>
+    <canvas id="aneis" aria-label="Segundo cérebro em anéis: CLAUDE.md no centro, departamentos ao redor, memórias e rotinas nos anéis externos"></canvas>
+    <div class="topo-aneis">
+      <button class="btn-os" id="menuBtn" aria-expanded="true" aria-controls="menu">≡ MENU</button>
+    </div>
+    <div class="menu" id="menu">
+      <div class="busca-m">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="qMenu" type="search" autocomplete="off" aria-label="Buscar arquivos">
+      </div>
+      <h5>LAYOUT</h5>
+      <div class="seg" id="segLayout">
+        <button data-v="forca" aria-pressed="false">Força</button>
+        <button data-v="circulo" aria-pressed="false">Círculo</button>
+        <button data-v="aneis" aria-pressed="true">Anéis</button>
+      </div>
+      <h5>VISÃO</h5>
+      <div class="seg" id="segVisao">
+        <button data-v="dep" aria-pressed="true">Departamentos</button>
+        <button data-v="pastas" aria-pressed="false">Pastas</button>
+      </div>
+      <h5>GIRO DOS ANÉIS</h5>
+      <input type="range" id="giro" min="0" max="1" step="0.05" value="0.25" aria-label="Giro dos anéis">
+      <label class="ck"><input type="checkbox" id="nomes"> nomes dos arquivos</label>
+      <div class="linha-ctl"><span>molas</span><output id="molasV">0.03</output></div>
+      <input type="range" id="molas" min="0.005" max="0.1" step="0.005" value="0.03" aria-label="Molas">
+      <div class="dupla"><button id="expandir">Expandir tudo</button><button id="recolher">Recolher tudo</button></div>
+      <div class="nota" id="notaMenu"></div>
+    </div>
+    <div class="camadas" id="camadas"></div>
+    <div class="dica" id="dicaA" hidden></div>
+  </section>
+  <section class="vista" id="vLista" hidden><ul class="lista" id="lista"></ul></section>
+  <section class="vista" id="vGrafo" hidden>
+    <canvas id="tela" aria-label="Mapa de notas e memórias com suas ligações"></canvas>
+    <div class="grafo-ctl">
+      <label><input type="checkbox" id="soLigados" checked> só itens com ligação</label>
+      <label><input type="checkbox" id="gVault" checked> notas</label>
+      <label><input type="checkbox" id="gMem" checked> memórias</label>
+      <button class="icone-btn" id="recentrar" title="Recentralizar">⤢</button>
+      <button class="icone-btn" id="reagitar" title="Reorganizar">↻</button>
+    </div>
+    <div class="legenda" id="legenda"></div>
+    <div class="dica" id="dica" hidden></div>
+  </section>
+  <section class="vista" id="vProjetos" hidden>
+    <div class="projetos" id="projetos"></div>
+    <div class="arvore" id="arvore"></div>
+  </section>
+  <aside id="painel" aria-live="polite">
+    <div class="vazio-painel">
+      <p><strong>Clique em qualquer item</strong></p>
+      <p>para ver caminho, prévia e ligações.</p>
+      <p style="margin-top:18px"><kbd>/</kbd> busca · <kbd>Esc</kbd> limpa · <kbd>↑</kbd><kbd>↓</kbd> navega</p>
+    </div>
+  </aside>
+</main>
+<footer id="rodape"></footer>
+<div class="toast" id="toast"></div>
+
+<script src="indice.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+const IDX = window.INDICE;
+if (!IDX) {
+  document.body.innerHTML = '<p style="padding:40px;font:15px system-ui;color:#E8EBF5;background:#070A1F">Índice não encontrado. Rode <code>node ~/.claude/agentic-os/cerebro/indexar.mjs</code> e recarregue.</p>';
+  return;
+}
+const ITENS = IDX.itens;
+const AREAS = [
+  ['projetos', 'Projetos (~/Projects)'], ['notas', 'Notas'], ['memoria', 'Memórias'],
+  ['skills', 'Skills'], ['artefatos', 'Artefatos'], ['rotinas', 'Rotinas'], ['nucleo', 'CLAUDE.md'],
+];
+const NOME_AREA = Object.fromEntries(AREAS);
+let COR = {};
+function lerCores() { const c = getComputedStyle(document.documentElement); COR = {}; for (const [a] of AREAS) COR[a] = c.getPropertyValue('--area-' + a).trim(); COR.aresta = c.getPropertyValue('--aresta').trim(); COR.tinta = c.getPropertyValue('--tinta').trim(); COR.fundo = c.getPropertyValue('--fundo').trim(); COR.foco = c.getPropertyValue('--foco').trim(); COR.tinta3 = c.getPropertyValue('--tinta-3').trim(); }
+lerCores();
+
+// ---------- preparo ----------
+const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const HOME = (ITENS.find(i => i.a === 'skills' || i.a === 'memoria')?.p.match(/^\/home\/[^/]+/) || ['/home'])[0];
+const curto = (p) => p.startsWith(HOME) ? '~' + p.slice(HOME.length) : p;
+const entrada = new Map(); // backlinks
+ITENS.forEach((it, i) => {
+  it.i = i;
+  it._t = norm(it.t);
+  it._h = it._t + '\n' + norm(curto(it.p)) + '\n' + norm(it.x);
+  if (it.l) for (const j of it.l) { if (!entrada.has(j)) entrada.set(j, []); entrada.get(j).push(i); }
+});
+
+const est = { q: '', areas: new Set(), tipo: '', ordem: 'rel', vista: 'aneis', sel: -1, limite: 120, resultado: [], depto: null, casa: null };
+
+// ---------- filtros ----------
+const contaArea = {}; const contaTipo = {};
+for (const it of ITENS) { contaArea[it.a] = (contaArea[it.a] || 0) + 1; contaTipo[it.k] = (contaTipo[it.k] || 0) + 1; }
+$('#chips').innerHTML = AREAS.filter(([a]) => contaArea[a]).map(([a, n]) =>
+  `<button class="chip" data-area="${a}" aria-pressed="false"><span class="bola" style="background:var(--area-${a})"></span>${n}<span class="n">${contaArea[a]}</span></button>`).join('');
+$('#tipo').insertAdjacentHTML('beforeend', Object.entries(contaTipo).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<option value="${esc(k)}">${esc(k)} (${n})</option>`).join(''));
+$('#legenda').innerHTML = [['notas', 'notas'], ['memoria', 'memórias']].map(([a, n]) => `<span><i style="background:var(--area-${a})"></i>${n}</span>`).join('') + '<span style="color:var(--tinta-3)">roda: zoom · arrastar: mover</span>';
+
+function alternarArea(a) {
+  est.areas.has(a) ? est.areas.delete(a) : est.areas.add(a);
+  document.querySelectorAll(`.chip[data-area="${a}"]`).forEach(b => b.setAttribute('aria-pressed', est.areas.has(a)));
+  atualizar();
+}
+$('#chips').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (b) alternarArea(b.dataset.area); });
+$('#tipo').addEventListener('change', (e) => { est.tipo = e.target.value; atualizar(); });
+$('#ordem').addEventListener('change', (e) => { est.ordem = e.target.value; atualizar(); });
+function definirBusca(v, origem) {
+  est.q = v; est.limite = 120;
+  if (origem !== $('#q')) $('#q').value = v;
+  if (origem !== $('#qMenu')) $('#qMenu').value = v;
+  atualizar();
+}
+$('#q').addEventListener('input', (e) => definirBusca(e.target.value, e.target));
+$('#qMenu').addEventListener('input', (e) => definirBusca(e.target.value, e.target));
+$('#qMenu').placeholder = `Buscar ${ITENS.length.toLocaleString('pt-BR')} arquivos… (/)`;
+
+// ---------- busca ----------
+function buscar() {
+  const t0 = performance.now();
+  const termos = norm(est.q).split(/\s+/).filter(Boolean);
+  const out = [];
+  const dep = est.depto ? est.depto.set : null;
+  for (const it of ITENS) {
+    if (est.areas.size && !est.areas.has(it.a)) continue;
+    if (est.tipo && it.k !== est.tipo) continue;
+    if (dep && !dep.has(it.i)) continue;
+    let score = 0, ok = true;
+    for (const t of termos) {
+      const pos = it._h.indexOf(t);
+      if (pos < 0) { ok = false; break; }
+      const pt = it._t.indexOf(t);
+      score += pt === 0 ? 30 : pt > 0 ? 18 : pos <= it._t.length + 200 ? 6 : 2;
+    }
+    if (!ok) continue;
+    it._s = score;
+    out.push(it);
+  }
+  if (est.ordem === 'rec' || (est.ordem === 'rel' && !termos.length)) out.sort((a, b) => b.m - a.m);
+  else if (est.ordem === 'nome') out.sort((a, b) => a._t.localeCompare(b._t));
+  else out.sort((a, b) => (b._s - a._s) || (b.m - a.m));
+  est.resultado = out;
+  est.ms = performance.now() - t0;
+  est.termos = termos;
+  est.casa = (termos.length || est.areas.size || est.tipo || dep) ? new Set(out.map(it => it.i)) : null;
+}
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+function realce(s) {
+  s = esc(s);
+  if (!est.termos?.length) return s;
+  const n = norm(s); let res = '', i = 0; const marcas = [];
+  for (const t of est.termos) { let p = n.indexOf(t); while (p >= 0) { marcas.push([p, p + t.length]); p = n.indexOf(t, p + t.length); } }
+  if (!marcas.length || n.length !== s.length) return s;
+  marcas.sort((a, b) => a[0] - b[0]);
+  for (const [a, b] of marcas) { if (a < i) continue; res += s.slice(i, a) + '<mark>' + s.slice(a, b) + '</mark>'; i = b; }
+  return res + s.slice(i);
+}
+const fmtData = (m) => { const d = new Date(m * 1000); const dias = (Date.now() - d) / 864e5; if (dias < 1) return 'hoje ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); if (dias < 2) return 'ontem'; if (dias < 30) return Math.floor(dias) + ' dias'; return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' }); };
+const fmtTam = (s) => s < 1024 ? s + ' B' : s < 1048576 ? (s / 1024).toFixed(1) + ' KB' : (s / 1048576).toFixed(1) + ' MB';
+
+// ---------- lista ----------
+function renderLista() {
+  const r = est.resultado;
+  if (!r.length) { $('#lista').innerHTML = '<li class="vazio">Nada encontrado. Tire um filtro ou mude o termo.</li>'; return; }
+  const parte = r.slice(0, est.limite);
+  $('#lista').innerHTML = parte.map(it => `
+    <li class="linha-item" data-i="${it.i}" ${it.i === est.sel ? 'aria-current="true"' : ''}>
+      <span class="bola" style="background:var(--area-${it.a});color:var(--area-${it.a})"></span>
+      <div style="min-width:0"><div class="tit">${realce(it.t)}</div><div class="cam">${realce(curto(it.p))}</div></div>
+      <div class="meta"><span class="tipo">${esc(it.k)}</span><br>${fmtData(it.m)}</div>
+    </li>`).join('') + (r.length > est.limite ? `<li><button class="btn mais" id="mais">mostrar mais ${Math.min(500, r.length - est.limite)} (de ${r.length - est.limite})</button></li>` : '');
+}
+$('#lista').addEventListener('click', (e) => {
+  if (e.target.id === 'mais') { est.limite += 500; renderLista(); return; }
+  const li = e.target.closest('.linha-item'); if (li) selecionar(+li.dataset.i);
+});
+
+// ---------- painel ----------
+function selecionar(i, rolar) {
+  est.sel = i;
+  document.body.classList.toggle('tem-sel', i >= 0);
+  if (i < 0) { if (est.vista === 'aneis') A.pedir(); return; }
+  const it = ITENS[i];
+  document.querySelectorAll('.linha-item[aria-current]').forEach(n => n.removeAttribute('aria-current'));
+  const li = document.querySelector(`.linha-item[data-i="${i}"]`);
+  if (li) { li.setAttribute('aria-current', 'true'); if (rolar) li.scrollIntoView({ block: 'nearest' }); }
+  const saida = (it.l || []).map(j => ITENS[j]);
+  const ent = (entrada.get(i) || []).map(j => ITENS[j]);
+  const lig = (arr) => arr.slice(0, 40).map(o => `<li data-i="${o.i}">${esc(o.t)}</li>`).join('') + (arr.length > 40 ? `<li style="color:var(--tinta-3);cursor:default">+${arr.length - 40}</li>` : '');
+  const ehDir = it.k === 'resumo';
+  $('#painel').innerHTML = `
+    <button class="fechar" id="fecharPainel" aria-label="Fechar detalhe">×</button>
+    <div class="rotulos"><span class="rotulo" style="color:var(--area-${it.a})">● ${esc(NOME_AREA[it.a] || it.a)}</span><span class="rotulo">${esc(it.k)}</span>${it.j ? `<span class="rotulo">${esc(it.j)}</span>` : ''}${it.g ? `<span class="rotulo">${esc(it.g)}</span>` : ''}</div>
+    <h2>${esc(it.t)}</h2>
+    <div style="color:var(--tinta-3);font-size:12px">mexido ${fmtData(it.m)} · ${new Date(it.m * 1000).toLocaleString('pt-BR')}${it.s ? ' · ' + fmtTam(it.s) : ''}${it.n ? ' · ' + it.n + ' linhas' : ''}</div>
+    <div class="caminho" id="cam">${esc(it.p)}</div>
+    <div class="acoes">
+      <button class="btn prim" id="copiar">Copiar caminho</button>
+      <a class="btn" href="${esc(encodeURI('file://' + it.p))}" target="_blank" rel="noopener">${ehDir ? 'Abrir pasta' : 'Abrir'}</a>
+      <a class="btn" href="${esc(encodeURI('file://' + it.p.replace(/\/[^/]*$/, '')))}" target="_blank" rel="noopener">Pasta</a>
+    </div>
+    ${it.x ? `<div class="preview">${esc(it.x)}${it.x.length >= 300 ? '…' : ''}</div>` : ''}
+    ${saida.length ? `<h4>Liga para (${saida.length})</h4><ul class="ligacoes">${lig(saida)}</ul>` : ''}
+    ${ent.length ? `<h4>Citado por (${ent.length})</h4><ul class="ligacoes">${lig(ent)}</ul>` : ''}`;
+  $('#copiar').onclick = () => copiar(it.p);
+  $('#fecharPainel').onclick = () => selecionar(-1);
+  if (est.vista === 'grafo') desenhar();
+  if (est.vista === 'aneis') A.pedir();
+}
+$('#painel').addEventListener('click', (e) => { const li = e.target.closest('.ligacoes li[data-i]'); if (li) { selecionar(+li.dataset.i, true); if (est.vista === 'grafo') focarNo(+li.dataset.i); } });
+function copiar(txt) {
+  const ok = () => toast('Caminho copiado');
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(txt).then(ok, () => copiarVelho(txt, ok)); else copiarVelho(txt, ok);
+}
+function copiarVelho(txt, ok) { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); ok(); } catch { toast('Não deu para copiar — selecione o caminho'); } t.remove(); }
+let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 1400); }
+
+// ---------- teclado ----------
+document.addEventListener('keydown', (e) => {
+  const campo = est.vista === 'aneis' ? $('#qMenu') : $('#q');
+  const naBusca = document.activeElement === $('#q') || document.activeElement === $('#qMenu');
+  if (e.key === '/' && !naBusca) {
+    e.preventDefault();
+    if (est.vista === 'aneis' && $('#menu').hidden) A.menu(true);
+    campo.focus(); campo.select(); return;
+  }
+  if (e.key === 'Escape') { if (est.depto) A.filtrarDepto(null); definirBusca('', null); if (est.vista === 'aneis') selecionar(-1); return; }
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && est.vista === 'lista') {
+    const r = est.resultado; if (!r.length) return;
+    e.preventDefault();
+    let pos = r.findIndex(x => x.i === est.sel);
+    pos = e.key === 'ArrowDown' ? Math.min(r.length - 1, pos + 1) : Math.max(0, pos - 1);
+    if (pos >= est.limite) { est.limite += 500; renderLista(); }
+    selecionar(r[pos].i, true);
+  }
+  if (e.key === 'Enter' && naBusca && est.resultado.length && est.vista === 'lista') selecionar(est.resultado[0].i, true);
+});
+
+// ---------- abas ----------
+function trocarVista(v) {
+  est.vista = v;
+  document.querySelectorAll('.abas button').forEach(x => x.setAttribute('aria-selected', x.dataset.vista === v));
+  document.body.classList.toggle('v-aneis', v === 'aneis');
+  $('#vAneis').hidden = v !== 'aneis';
+  $('#vLista').hidden = v !== 'lista';
+  $('#vGrafo').hidden = v !== 'grafo';
+  $('#vProjetos').hidden = v !== 'projetos';
+  try { localStorage.setItem('cerebro.vista', v); } catch {}
+  if (v === 'lista' && renderListaTardia) { renderListaTardia = false; renderLista(); }
+  if (v === 'grafo') iniciarGrafo();
+  if (v === 'projetos') renderProjetos();
+  if (v === 'aneis') A.iniciar(); else A.parar();
+}
+document.querySelector('.abas').addEventListener('click', (e) => { const b = e.target.closest('[data-vista]'); if (b) trocarVista(b.dataset.vista); });
+
+// ---------- projetos (~/Projects) ----------
+let projSel = '';
+function renderProjetos() {
+  const doProj = est.resultado.filter(it => it.a === 'projetos');
+  const grupos = new Map();
+  for (const it of doProj) { const j = it.j || '(raiz)'; if (!grupos.has(j)) grupos.set(j, []); grupos.get(j).push(it); }
+  const lista = [...grupos.entries()].sort((a, b) => b[1].length - a[1].length);
+  if (!lista.length) { $('#projetos').innerHTML = '<div class="vazio">Nada de ~/Projects com os filtros atuais.</div>'; $('#arvore').innerHTML = ''; return; }
+  if (!grupos.has(projSel)) projSel = lista[0][0];
+  const tiposCor = { nota: 'var(--area-projetos)', migration: 'var(--area-skills)', config: 'var(--area-memoria)' };
+  $('#projetos').innerHTML = lista.map(([j, arr]) => {
+    const c = {}; let rec = 0;
+    for (const it of arr) { c[it.k] = (c[it.k] || 0) + 1; rec = Math.max(rec, it.m); }
+    const barras = Object.entries(c).map(([k, n]) => `<span title="${esc(k)}: ${n}" style="width:${(n / arr.length) * 100}%;background:${tiposCor[k] || 'var(--tinta-3)'}"></span>`).join('');
+    return `<button class="card" data-j="${esc(j)}" aria-pressed="${j === projSel}"><h3>${esc(j)}</h3><div class="barras">${barras}</div>
+      <div class="num">${arr.length} itens · ${Object.entries(c).map(([k, n]) => n + ' ' + k).join(' · ')}<br>mexido ${fmtData(rec)}</div></button>`;
+  }).join('');
+  renderArvore(grupos.get(projSel) || []);
+}
+function renderArvore(arr) {
+  if (!arr.length) { $('#arvore').innerHTML = ''; return; }
+  const raiz = { pastas: new Map(), folhas: [], n: 0 };
+  for (const it of arr) {
+    const partes = (it.d || '').split('/').filter(Boolean).slice(1);
+    let no = raiz; no.n++;
+    for (const p of partes) { if (!no.pastas.has(p)) no.pastas.set(p, { pastas: new Map(), folhas: [], n: 0 }); no = no.pastas.get(p); no.n++; }
+    no.folhas.push(it);
+  }
+  const html = (no, nivel) => {
+    let s = '';
+    for (const [nome, sub] of [...no.pastas.entries()].sort((a, b) => b[1].n - a[1].n)) {
+      s += `<details ${nivel < 1 || est.q ? 'open' : ''}><summary>${esc(nome)}/ <span class="n">${sub.n}</span></summary>${html(sub, nivel + 1)}</details>`;
+    }
+    s += no.folhas.sort((a, b) => b.m - a.m).map(it => `<div class="folha" data-i="${it.i}"><span>${realce(it.t)}</span><small>${esc(it.k)} · ${fmtData(it.m)}</small></div>`).join('');
+    return s;
+  };
+  $('#arvore').innerHTML = `<h2>${esc(projSel)} <span style="color:var(--tinta-3);font-weight:400">· ${arr.length} itens</span></h2>` + html(raiz, 0);
+}
+$('#projetos').addEventListener('click', (e) => { const c = e.target.closest('.card'); if (!c) return; projSel = c.dataset.j; renderProjetos(); $('#arvore').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+$('#arvore').addEventListener('click', (e) => { const f = e.target.closest('.folha'); if (f) selecionar(+f.dataset.i); });
+
+// ---------- grafo (força feita à mão) ----------
+const cv = $('#tela'); const ctx = cv.getContext('2d');
+let nos = [], arestas = [], cam = { x: 0, y: 0, z: 0.5 }, alpha = 0, animando = false, grafoPronto = false;
+let hover = -1, arrastoNo = null, arrastoTela = null;
+const porItem = new Map();
+
+function montarGrafo() {
+  const soLig = $('#soLigados').checked, gV = $('#gVault').checked, gM = $('#gMem').checked;
+  const velho = new Map(nos.map(n => [n.i, n]));
+  nos = []; porItem.clear();
+  const areasOk = (a) => (a === 'notas' && gV) || (a === 'memoria' && gM);
+  const conectado = (it) => (it.l && it.l.some(j => areasOk(ITENS[j].a))) || (entrada.get(it.i) || []).some(j => areasOk(ITENS[j].a));
+  // sub-agrupamento: pasta de 1º nível das notas / tipo da memória
+  const centros = new Map();
+  const grupo = (it) => it.a === 'notas' ? 'v:' + ((it.d || '').split('/')[0] || '·') : 'm:' + it.k;
+  for (const it of ITENS) {
+    if (!areasOk(it.a)) continue;
+    if (soLig && !conectado(it)) continue;
+    const g = grupo(it);
+    if (!centros.has(g)) centros.set(g, null);
+    const v = velho.get(it.i);
+    const n = v || { i: it.i, a: it.a, x: 0, y: 0, vx: 0, vy: 0, g, grau: 0 };
+    n.grau = 0; n.g = g;
+    porItem.set(it.i, nos.length); nos.push(n);
+  }
+  // centros: notas à esquerda, memória à direita, subgrupos em anel
+  const gs = [...centros.keys()];
+  const vg = gs.filter(g => g[0] === 'v'), mg = gs.filter(g => g[0] === 'm');
+  vg.forEach((g, k) => { const ang = (k / vg.length) * Math.PI * 2; centros.set(g, { x: -700 + Math.cos(ang) * 420, y: Math.sin(ang) * 420 }); });
+  mg.forEach((g, k) => { const ang = (k / mg.length) * Math.PI * 2; centros.set(g, { x: 700 + Math.cos(ang) * 260, y: Math.sin(ang) * 260 }); });
+  for (const n of nos) { n.c = centros.get(n.g); if (!velho.has(n.i)) { n.x = n.c.x + (Math.random() - .5) * 200; n.y = n.c.y + (Math.random() - .5) * 200; } }
+  arestas = [];
+  for (const n of nos) {
+    const it = ITENS[n.i];
+    for (const j of it.l || []) { const k = porItem.get(j); if (k !== undefined && k !== porItem.get(n.i)) { arestas.push([porItem.get(n.i), k]); n.grau++; nos[k].grau++; } }
+  }
+  for (const n of nos) n.r = 3 + Math.min(9, Math.sqrt(n.grau) * 1.6);
+}
+
+function passo() {
+  const N = nos.length, CEL = 50, grade = new Map();
+  for (let k = 0; k < N; k++) { const n = nos[k]; const key = ((n.x / CEL) | 0) + ',' + ((n.y / CEL) | 0); let b = grade.get(key); if (!b) grade.set(key, b = []); b.push(k); }
+  // repulsão local (grade 3x3)
+  for (let k = 0; k < N; k++) {
+    const n = nos[k]; const cx = (n.x / CEL) | 0, cy = (n.y / CEL) | 0;
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+      const b = grade.get((cx + dx) + ',' + (cy + dy)); if (!b) continue;
+      for (const o of b) {
+        if (o <= k) continue; const m = nos[o];
+        let ddx = n.x - m.x, ddy = n.y - m.y, d2 = ddx * ddx + ddy * ddy;
+        if (d2 > CEL * CEL) continue;
+        if (d2 < 0.01) { ddx = Math.random() - .5; ddy = Math.random() - .5; d2 = 0.5; }
+        const f = 900 / d2 * alpha; n.vx += ddx * f; n.vy += ddy * f; m.vx -= ddx * f; m.vy -= ddy * f;
+      }
+    }
+  }
+  // molas
+  for (const [a, b] of arestas) {
+    const n = nos[a], m = nos[b]; const dx = m.x - n.x, dy = m.y - n.y; const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    const f = (d - 60) * 0.012 * alpha; const fx = dx / d * f, fy = dy / d * f;
+    n.vx += fx; n.vy += fy; m.vx -= fx; m.vy -= fy;
+  }
+  // gravidade para o centro do grupo
+  for (const n of nos) {
+    if (n === arrastoNo) { n.vx = n.vy = 0; continue; }
+    n.vx += (n.c.x - n.x) * 0.006 * alpha; n.vy += (n.c.y - n.y) * 0.006 * alpha;
+    n.vx *= 0.6; n.vy *= 0.6; n.x += n.vx; n.y += n.vy;
+  }
+  alpha *= 0.985;
+}
+
+function ajustarTela() { const r = cv.getBoundingClientRect(); const d = devicePixelRatio || 1; cv.width = r.width * d; cv.height = r.height * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
+const paraTela = (x, y) => [(x - cam.x) * cam.z + cv.clientWidth / 2, (y - cam.y) * cam.z + cv.clientHeight / 2];
+const doMundo = (sx, sy) => [(sx - cv.clientWidth / 2) / cam.z + cam.x, (sy - cv.clientHeight / 2) / cam.z + cam.y];
+
+function desenhar() {
+  if (!nos.length) { ctx.clearRect(0, 0, cv.clientWidth, cv.clientHeight); return; }
+  const W = cv.clientWidth, H = cv.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+  const casa = new Set(est.resultado.map(it => it.i));
+  const filtrando = !!est.q || est.areas.size || est.tipo;
+  const vizSel = new Set(); if (est.sel >= 0) { vizSel.add(est.sel); for (const j of ITENS[est.sel].l || []) vizSel.add(j); for (const j of entrada.get(est.sel) || []) vizSel.add(j); }
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = COR.aresta; ctx.beginPath();
+  for (const [a, b] of arestas) { const n = nos[a], m = nos[b]; const [x1, y1] = paraTela(n.x, n.y), [x2, y2] = paraTela(m.x, m.y); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+  ctx.stroke();
+  if (est.sel >= 0 && porItem.has(est.sel)) {
+    ctx.strokeStyle = COR.foco; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (const [a, b] of arestas) { if (nos[a].i !== est.sel && nos[b].i !== est.sel) continue; const [x1, y1] = paraTela(nos[a].x, nos[a].y), [x2, y2] = paraTela(nos[b].x, nos[b].y); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+  }
+  for (let k = 0; k < nos.length; k++) {
+    const n = nos[k]; const [x, y] = paraTela(n.x, n.y); const r = Math.max(1.5, n.r * Math.sqrt(cam.z));
+    if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
+    const apagado = (filtrando && !casa.has(n.i)) || (est.sel >= 0 && !vizSel.has(n.i));
+    ctx.globalAlpha = apagado ? 0.15 : 1;
+    ctx.fillStyle = COR[n.a]; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    if (n.i === est.sel || k === hover) { ctx.strokeStyle = COR.tinta; ctx.lineWidth = 2; ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1;
+  // rótulos: nós grandes com zoom, vizinhos da seleção e resultados de busca curtos
+  ctx.font = '11px system-ui, sans-serif'; ctx.fillStyle = COR.tinta; ctx.textBaseline = 'middle';
+  const mostrarBusca = filtrando && casa.size < 60;
+  for (const n of nos) {
+    const vale = (est.sel >= 0 && vizSel.has(n.i)) || (mostrarBusca && casa.has(n.i)) || (cam.z > 1.1 && n.grau >= 3) || (cam.z > 2);
+    if (!vale) continue;
+    const [x, y] = paraTela(n.x, n.y); if (x < 0 || y < 0 || x > W || y > H) continue;
+    const t = ITENS[n.i].t; ctx.fillText(t.length > 40 ? t.slice(0, 39) + '…' : t, x + n.r * Math.sqrt(cam.z) + 4, y);
+  }
+}
+
+function laco() {
+  if (!animando) return;
+  for (let s = 0; s < 2; s++) passo();
+  desenhar();
+  if (alpha > 0.02 || arrastoNo) requestAnimationFrame(laco); else animando = false;
+}
+function agitar(a = 1) { alpha = Math.max(alpha, a); if (!animando) { animando = true; requestAnimationFrame(laco); } }
+function enquadrar() {
+  if (!nos.length) return;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const n of nos) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  cam.x = (x0 + x1) / 2; cam.y = (y0 + y1) / 2;
+  cam.z = Math.min(cv.clientWidth / (x1 - x0 + 120), cv.clientHeight / (y1 - y0 + 120), 2);
+  desenhar();
+}
+function iniciarGrafo() {
+  ajustarTela();
+  if (!grafoPronto) {
+    grafoPronto = true; montarGrafo(); alpha = 1;
+    for (let s = 0; s < 220; s++) passo(); // pré-aquecimento síncrono (~poucos ms por passo)
+    enquadrar(); agitar(0.2);
+  } else desenhar();
+}
+function focarNo(i) { const k = porItem.get(i); if (k === undefined) return; cam.x = nos[k].x; cam.y = nos[k].y; cam.z = Math.max(cam.z, 1.4); desenhar(); }
+function noEm(sx, sy) {
+  const [x, y] = doMundo(sx, sy); let best = -1, bd = Infinity;
+  for (let k = 0; k < nos.length; k++) { const n = nos[k]; const d = (n.x - x) ** 2 + (n.y - y) ** 2; const r = (n.r + 4 / cam.z) ** 2; if (d < r && d < bd) { bd = d; best = k; } }
+  return best;
+}
+window.addEventListener('resize', () => { if (est.vista === 'grafo') { ajustarTela(); desenhar(); } });
+cv.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  const [wx, wy] = doMundo(sx, sy);
+  cam.z = Math.min(8, Math.max(0.05, cam.z * Math.exp(-e.deltaY * 0.0015)));
+  const [nx, ny] = doMundo(sx, sy); cam.x += wx - nx; cam.y += wy - ny;
+  desenhar();
+}, { passive: false });
+let moveu = false;
+cv.addEventListener('pointerdown', (e) => {
+  const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  const k = noEm(sx, sy); moveu = false;
+  cv.setPointerCapture(e.pointerId); cv.classList.add('arrastando');
+  if (k >= 0) { arrastoNo = nos[k]; agitar(0.15); } else arrastoTela = { sx, sy, cx: cam.x, cy: cam.y };
+});
+cv.addEventListener('pointermove', (e) => {
+  const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  if (arrastoNo) { const [x, y] = doMundo(sx, sy); arrastoNo.x = x; arrastoNo.y = y; moveu = true; return; }
+  if (arrastoTela) { cam.x = arrastoTela.cx - (sx - arrastoTela.sx) / cam.z; cam.y = arrastoTela.cy - (sy - arrastoTela.sy) / cam.z; moveu = moveu || Math.abs(sx - arrastoTela.sx) + Math.abs(sy - arrastoTela.sy) > 3; desenhar(); return; }
+  const k = noEm(sx, sy);
+  if (k !== hover) { hover = k; desenhar(); }
+  const d = $('#dica');
+  if (k >= 0) { d.hidden = false; d.textContent = ITENS[nos[k].i].t; d.style.left = (sx + 14) + 'px'; d.style.top = (sy + 10) + 'px'; } else d.hidden = true;
+});
+cv.addEventListener('pointerup', (e) => {
+  const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  cv.classList.remove('arrastando');
+  if (!moveu) { const k = noEm(sx, sy); if (k >= 0) selecionar(nos[k].i); else if (arrastoTela) { est.sel = -1; desenhar(); } }
+  arrastoNo = null; arrastoTela = null;
+});
+cv.addEventListener('pointerleave', () => { $('#dica').hidden = true; hover = -1; });
+for (const id of ['#soLigados', '#gVault', '#gMem']) $(id).addEventListener('change', () => { montarGrafo(); alpha = 1; for (let s = 0; s < 150; s++) passo(); enquadrar(); agitar(0.2); });
+$('#recentrar').onclick = enquadrar;
+$('#reagitar').onclick = () => { for (const n of nos) { n.x = n.c.x + (Math.random() - .5) * 300; n.y = n.c.y + (Math.random() - .5) * 300; } alpha = 1; for (let s = 0; s < 220; s++) passo(); enquadrar(); agitar(0.2); };
+
+// ---------- anéis (canvas próprio, sem biblioteca) ----------
+// Orçamento: ≤30 fps, só anima enquanto há giro/transição/física; pausa com a aba oculta;
+// prefers-reduced-motion = estático. Fundo (campo de pontos + hexágonos) é pré-renderizado
+// numa tela fora da página e só GIRA por drawImage — nada de recalcular milhares de pontos por quadro.
+const A = (() => {
+  const cv = $('#aneis'), ctx = cv.getContext('2d');
+  const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LAR = '#5B7FFF'; // azul da marca UPTOΛI (antes laranja)
+  const R = { skills: 150, deptos: 292, memIn: 384, memOut: 438, memLinha: 456, rot: 548, fontes: 640, campoIn: 168, campoOut: 760 };
+  const cfg = { layout: 'aneis', visao: 'dep', giro: 0.25, nomes: false, molas: 0.03, menu: true };
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem('cerebro.aneis') || '{}')); } catch {}
+  if (reduz) cfg.giro = 0;
+  const salvar = () => { try { localStorage.setItem('cerebro.aneis', JSON.stringify(cfg)); } catch {} };
+
+  let W = 0, H = 0, dpr = 1, cam = { x: 0, y: 0, z: 0.6 }, camAuto = true, iniciado = false;
+  let ultimoLeque = null, deptos = [], abertos = new Set(), abrindo = new Map(), alvos = [], hover = null;
+
+  // ----- ícones (SVG 24×24 desenhados à mão, viram Path2D) -----
+  const ICON = {
+    doc: 'M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6',
+    diamante: 'M12 3l9 9-9 9-9-9z M12 8l4 4-4 4-4-4z',
+    chat: 'M4 5h16v11H10l-5 4v-4H4z M8 10h8',
+    kanban: 'M4 4h4v16H4z M10 4h4v10h-4z M16 4h4v7h-4z',
+    sol: 'M12 8.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7z M12 2.5v3 M12 18.5v3 M2.5 12h3 M18.5 12h3 M5.3 5.3l2.1 2.1 M16.6 16.6l2.1 2.1 M5.3 18.7l2.1-2.1 M16.6 7.4l2.1-2.1',
+    pasta: 'M3 6h6l2 2h10v11H3z',
+    livro: 'M12 6v14 M12 6C10 4.5 6.5 4.3 3.5 5v14c3-.7 6.5-.5 8.5 1 2-1.5 5.5-1.7 8.5-1V5c-3-.7-6.5-.5-8.5 1z',
+    faisca: 'M12 3v4 M12 17v4 M3 12h4 M17 12h4 M12 8.5l1.3 2.2 2.2 1.3-2.2 1.3-1.3 2.2-1.3-2.2-2.2-1.3 2.2-1.3z',
+    raio: 'M13 2L4.5 13.5H11L10 22l8.5-11.5H12z',
+    pilha: 'M4 8l8-4 8 4-8 4z M4 12l8 4 8-4 M4 16l8 4 8-4',
+    relogio: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z M12 7v5l3.2 2',
+    globo: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z M3 12h18 M12 3c3 3.2 3 14.8 0 18 M12 3c-3 3.2-3 14.8 0 18',
+  };
+  const P2 = {}; for (const k in ICON) P2[k] = new Path2D(ICON[k]);
+  function icone(nome, x, y, tam, cor, lw = 1.7) {
+    const s = tam / 24;
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-12, -12);
+    ctx.strokeStyle = cor; ctx.lineWidth = lw / s; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.stroke(P2[nome] || P2.pasta); ctx.restore();
+  }
+  // brilho: sprite de gradiente radial por cor (cache) — evita shadowBlur, que é caro
+  const brilhos = new Map();
+  function brilho(cor) {
+    if (brilhos.has(cor)) return brilhos.get(cor);
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d'); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, hexA(cor, .55)); gr.addColorStop(.35, hexA(cor, .18)); gr.addColorStop(1, hexA(cor, 0));
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128); brilhos.set(cor, c); return c;
+  }
+  function hexA(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+
+  // ----- departamentos -----
+  const DEP = [
+    { id: 'projetos', nome: 'PROJETOS', cor: '#3DD68C', icone: 'pasta', desc: 'repositórios em ~/Projects', teste: it => it.a === 'projetos' },
+    { id: 'notas', nome: 'NOTAS', cor: '#F739C9', icone: 'livro', desc: 'pasta de notas (CEREBRO_VAULT/NOTAS_DIR)', teste: it => it.a === 'notas' },
+    { id: 'memoria', nome: 'MEMÓRIA', cor: '#A98BFF', icone: 'faisca', desc: 'memórias do Claude', teste: it => it.a === 'memoria' },
+    { id: 'skills', nome: 'SKILLS', cor: '#9DB2FF', icone: 'raio', desc: '~/.claude/skills', teste: it => it.a === 'skills' },
+    { id: 'artefatos', nome: 'ARTEFATOS', cor: '#7B5CFF', icone: 'pilha', desc: 'relatórios de limpeza e docs de sessão', teste: it => it.a === 'artefatos' },
+    { id: 'rotinas', nome: 'ROTINAS', cor: '#F2C661', icone: 'relogio', desc: 'timers do systemd', teste: it => it.a === 'rotinas' },
+  ];
+  const PALETA = ['#C43BE0', '#4D74FF', '#6E78A8', '#9FE8C3', '#3DD68C', '#F739C9', '#A98BFF', '#9DB2FF', '#7B5CFF', '#F2C661', '#FF9AE6', '#C9D3FF'];
+  const ICONE_AREA = { projetos: 'pasta', notas: 'livro', memoria: 'faisca', skills: 'raio', artefatos: 'pilha', rotinas: 'relogio' };
+  function pastaDe(it) {
+    switch (it.a) {
+      case 'projetos': return ['projetos', it.j || '(raiz)'];
+      case 'notas': return ['notas', (it.d || '').split('/')[0] || '(raiz)'];
+      case 'memoria': return ['memoria', it.k];
+      case 'artefatos': return ['artefatos', it.g || 'artefatos'];
+      default: return [it.a, it.a];
+    }
+  }
+  const nucleo = ITENS.find(it => it.a === 'nucleo');
+
+  function montarDeptos() {
+    const g = new Map();
+    if (cfg.visao === 'dep') {
+      for (const d of DEP) g.set(d.id, { ...d, itens: [] });
+      for (const it of ITENS) { if (it.a === 'nucleo') continue; const d = DEP.find(d => d.teste(it)); if (d) g.get(d.id).itens.push(it); }
+    } else {
+      const tmp = new Map();
+      for (const it of ITENS) { if (it.a === 'nucleo') continue; const [a, p] = pastaDe(it); const k = a + '/' + p; if (!tmp.has(k)) tmp.set(k, { a, p, itens: [] }); tmp.get(k).itens.push(it); }
+      const ord = [...tmp.values()].sort((x, y) => y.itens.length - x.itens.length);
+      const top = ord.slice(0, 11), resto = ord.slice(11);
+      top.forEach((t, k) => g.set(t.a + '/' + t.p, { id: 'p:' + t.a + '/' + t.p, nome: t.p.toUpperCase().slice(0, 18), cor: PALETA[k % PALETA.length], icone: ICONE_AREA[t.a] || 'pasta', desc: (t.a === 'memoria' ? 'memória · tipo ' : t.a + '/') + t.p, itens: t.itens }));
+      if (resto.length) g.set('outras', { id: 'p:outras', nome: 'OUTRAS PASTAS', cor: '#7F87AA', icone: 'pasta', desc: resto.length + ' pastas menores', itens: resto.flatMap(t => t.itens) });
+    }
+    deptos = [...g.values()].filter(d => d.itens.length);
+    for (const d of deptos) { d.itens.sort((a, b) => b.m - a.m); d.set = new Set(d.itens.map(it => it.i)); }
+    abertos = new Set([...abertos].filter(id => deptos.some(d => d.id === id)));
+    if (est.depto && !deptos.some(d => d.id === est.depto.id)) filtrarDepto(null);
+    posicionar();
+    montarCirculo();
+    if (cfg.layout === 'forca') iniciarForca();
+  }
+  function posicionar() {
+    const n = deptos.length;
+    deptos.forEach((d, k) => {
+      const a = -Math.PI / 2 + ((k + 0.5) / n) * Math.PI * 2;
+      const rr = cfg.layout === 'circulo' ? 400 : R.deptos + (k % 2 ? 26 : -14);
+      d.ang = a; d.bx = Math.cos(a) * rr; d.by = Math.sin(a) * rr;
+      if (cfg.layout !== 'forca') { d.x = d.bx; d.y = d.by; }
+      d.leque = null;
+    });
+  }
+
+  // ----- pontos dos anéis (dados reais) -----
+  const skillsArr = ITENS.filter(it => it.a === 'skills').sort((a, b) => a._t.localeCompare(b._t));
+  const ORDEM_MEM = { feedback: 0, reference: 1, project: 2, user: 3 };
+  const memArr = ITENS.filter(it => it.a === 'memoria').sort((a, b) => ((ORDEM_MEM[a.k] ?? 4) - (ORDEM_MEM[b.k] ?? 4)) || (b.m - a.m));
+  const COR_MEM = ['#A98BFF', '#7B5CFF', '#C47CF5', '#DCCBFF', '#6E78A8'];
+  const memPos = memArr.map((it, k) => {
+    const filas = 4, porFila = Math.ceil(memArr.length / filas);
+    const f = k % filas, j = Math.floor(k / filas);
+    return { it, a: (j / porFila) * Math.PI * 2 + f * 0.012, r: R.memIn + f * ((R.memOut - R.memIn) / (filas - 1)), c: ORDEM_MEM[it.k] ?? 4 };
+  });
+  const timers = ITENS.filter(it => it.a === 'rotinas');
+  const relatRot = ITENS.filter(it => it.a === 'artefatos' && it.g === 'limpeza');
+  const rotPos = [];
+  timers.forEach((it, k) => rotPos.push({ it, a: -Math.PI / 2 + 0.55 + (k / Math.max(1, timers.length)) * Math.PI * 2, r: R.rot, grande: true }));
+  const ancora = rotPos.find(p => /limpeza/.test(p.it.t));
+  relatRot.forEach((it, k) => rotPos.push({ it, a: (ancora ? ancora.a : 0) + 0.06 * (k + 1), r: R.rot + (k % 2 ? 9 : -9), grande: false }));
+  const FONTES = [
+    { a: 'projetos', nome: '~/Projects', icone: 'pasta' }, { a: 'notas', nome: 'pasta de notas', icone: 'livro' },
+    { a: 'memoria', nome: '~/.claude/projects/…/memory', icone: 'faisca' }, { a: 'skills', nome: '~/.claude/skills', icone: 'raio' },
+    { a: 'artefatos', nome: '~/.claude/limpeza + doc-de-sessao', icone: 'pilha' }, { a: 'rotinas', nome: '~/.config/systemd/user', icone: 'relogio' },
+    { a: 'nucleo', nome: '~/.claude/CLAUDE.md', icone: 'doc' },
+  ].filter(f => contaArea[f.a]);
+  FONTES.forEach((f, k) => { f.ang = -Math.PI / 2 + 0.3 + (k / FONTES.length) * Math.PI * 2; f.cor = COR[f.a] || '#4D74FF'; });
+
+  // ----- camadas que giram: canvases no DOM, girados só pelo transform (sem redesenhar o canvas) -----
+  // O JS desenha cada camada UMA vez; o giro só troca uma string de transform a 12–20 fps.
+  // (Animação CSS/WAAPI foi medida: roda a 60 fps no compositor e não dá para limitar.) 8–20 fps conforme o giro.
+  const embrulho = $('#camadasA');
+  const lay = { campo: $('#lCampo'), hex: $('#lHex'), mem: $('#lMem'), skills: $('#lSkills') };
+  const ang = { campo: 0, skills: 0 };
+  const VEL = { campo: 0.05, skills: -0.08 }; // rad/s com giro = 1
+  function aplicarGiro() { if (cfg.giro > 0 && !reduz) pedir(); }
+  function girarCamadas() {
+    lay.campo.style.transform = lay.mem.style.transform = `rotate(${ang.campo}rad)`;
+    lay.skills.style.transform = `rotate(${ang.skills}rad)`;
+  }
+  const angDe = (nome) => nome === 'skills' ? ang.skills : ang.campo;
+  let camadaZ = 0, regerar = 0, chaveCam = '';
+  function prepCamada(el, raio) {
+    const esc = camadaZ * dpr, lado = Math.ceil(2 * raio * esc) + 4, css = lado / dpr;
+    el.width = el.height = lado; el.style.width = el.style.height = css + 'px'; el.style.left = el.style.top = (-css / 2) + 'px';
+    const g = el.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, lado, lado); g.translate(lado / 2, lado / 2); g.scale(esc, esc);
+    return g;
+  }
+  function gerarCampo() {
+    const g = prepCamada(lay.campo, R.campoOut);
+    const gr = g.createRadialGradient(0, 0, R.skills * .6, 0, 0, R.campoOut);
+    gr.addColorStop(0, 'rgba(40,14,60,0)'); gr.addColorStop(.3, 'rgba(74,34,130,.20)'); gr.addColorStop(.55, 'rgba(62,28,118,.16)'); gr.addColorStop(.8, 'rgba(30,20,70,.08)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(0, 0, R.campoOut, 0, 6.2832); g.fill();
+    // ondas radiais de pontos (tamanho e brilho modulados por seno)
+    for (let r = R.campoIn; r <= R.campoOut; r += 12) {
+      const n = Math.floor((2 * Math.PI * r) / 11);
+      const banda = Math.exp(-(((r - 470) / 200) ** 2));
+      for (let k = 0; k < n; k++) {
+        const t = (k / n) * Math.PI * 2;
+        const w = 0.5 + 0.5 * Math.sin(t * 5 + r * 0.045) * Math.cos(t * 2 - r * 0.018);
+        const tam = (0.45 + 2.9 * w * w) * (0.55 + 0.75 * banda);
+        const al = 0.05 + 0.34 * w * banda;
+        if (al < 0.06) continue;
+        const hue = 270 + 34 * Math.sin(t * 1.5 + r * 0.006);
+        g.fillStyle = `hsla(${hue | 0},80%,${62 + 10 * w | 0}%,${al.toFixed(3)})`;
+        g.beginPath(); g.arc(Math.cos(t) * r, Math.sin(t) * r, tam, 0, 6.2832); g.fill();
+      }
+    }
+  }
+  function gerarHex() {
+    const raio = R.skills + 70, g = prepCamada(lay.hex, raio);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, raio);
+    gr.addColorStop(0, 'rgba(91,127,255,.16)'); gr.addColorStop(.5, 'rgba(91,127,255,.05)'); gr.addColorStop(1, 'rgba(91,127,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(0, 0, raio, 0, 6.2832); g.fill();
+    g.save(); g.beginPath(); g.arc(0, 0, R.skills - 2, 0, 6.2832); g.clip();
+    const s = 13, hw = Math.sqrt(3) * s;
+    g.strokeStyle = 'rgba(91,127,255,.13)'; g.lineWidth = 0.8; g.beginPath();
+    for (let row = -14; row <= 14; row++) for (let col = -9; col <= 9; col++) {
+      const cx = col * hw + (row % 2 ? hw / 2 : 0), cy = row * s * 1.5;
+      for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; const x = cx + Math.cos(a) * s, y = cy + Math.sin(a) * s; v ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.closePath();
+    }
+    g.stroke(); g.restore();
+    // faixa de losangos azuis em volta do anel SKILLS
+    for (let r = R.skills - 34; r <= R.skills + 46; r += 10) {
+      const n = Math.floor((2 * Math.PI * r) / 12), d = Math.abs(r - R.skills) / 46;
+      g.fillStyle = `rgba(91,127,255,${(0.32 * (1 - d) + 0.04).toFixed(3)})`;
+      for (let k = 0; k < n; k++) {
+        const t = (k / n) * Math.PI * 2 + (r % 20 ? 0.02 : 0); const w = 0.5 + 0.5 * Math.sin(t * 8 + r * .2);
+        const tm = 0.6 + 1.5 * w * (1 - d); const x = Math.cos(t) * r, y = Math.sin(t) * r;
+        g.beginPath(); g.moveTo(x, y - tm); g.lineTo(x + tm, y); g.lineTo(x, y + tm); g.lineTo(x - tm, y); g.fill();
+      }
+    }
+  }
+  function pontosCamada(g, lista, cor, r, al) { if (!lista.length) return; g.globalAlpha = al; g.fillStyle = cor; g.beginPath(); for (const [x, y] of lista) { g.moveTo(x + r, y); g.arc(x, y, r, 0, 6.2832); } g.fill(); g.globalAlpha = 1; }
+  function anelSel(g, x, y, r, cor) { g.strokeStyle = cor; g.lineWidth = 2 / camadaZ; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.stroke(); }
+  const R_MEM = () => Math.max(1.2, 2.6 * cam.z) / cam.z, R_SK = () => Math.max(1.3, 2.4 * cam.z) / cam.z;
+  function gerarMem() {
+    const g = prepCamada(lay.mem, R.memOut + 12), casa = est.casa, rr = R_MEM();
+    const por = COR_MEM.map(() => []), apag = [];
+    for (const p of memPos) { const x = Math.cos(p.a) * p.r, y = Math.sin(p.a) * p.r; (casa && !casa.has(p.it.i) ? apag : por[p.c]).push([x, y]); }
+    pontosCamada(g, apag, '#454C73', rr, .22); por.forEach((l, c) => pontosCamada(g, l, COR_MEM[c], rr, .95));
+    for (const p of memPos) {
+      if (p.it.i === est.sel) anelSel(g, Math.cos(p.a) * p.r, Math.sin(p.a) * p.r, rr + 4 / camadaZ, '#fff');
+      else if (hover && hover.it === p.it) anelSel(g, Math.cos(p.a) * p.r, Math.sin(p.a) * p.r, rr + 4 / camadaZ, LAR);
+    }
+  }
+  function gerarSkills() {
+    const g = prepCamada(lay.skills, R.skills + 12), casa = est.casa, rr = R_SK(), vivo = [], apag = [];
+    skillsArr.forEach((it, k) => { const a = (k / skillsArr.length) * Math.PI * 2; (casa && !casa.has(it.i) ? apag : vivo).push([Math.cos(a) * R.skills, Math.sin(a) * R.skills]); });
+    pontosCamada(g, apag, LAR, rr, .25); pontosCamada(g, vivo, '#9DB2FF', rr, 1);
+    skillsArr.forEach((it, k) => {
+      const a = (k / skillsArr.length) * Math.PI * 2, x = Math.cos(a) * R.skills, y = Math.sin(a) * R.skills;
+      if (it.i === est.sel) anelSel(g, x, y, rr + 4 / camadaZ, '#fff'); else if (hover && hover.it === it) anelSel(g, x, y, rr + 4 / camadaZ, LAR);
+    });
+  }
+  function gerarFundo() { camadaZ = Math.min(1.6, cam.z); gerarCampo(); gerarHex(); chaveCam = ''; }
+  function conferirCamadas(ox, oy) {
+    if (!camadaZ) gerarFundo();
+    else if (Math.abs(Math.log(Math.min(1.6, cam.z) / camadaZ)) > 0.3) { clearTimeout(regerar); regerar = setTimeout(() => { gerarFundo(); pedir(); }, 180); }
+    // memória/skills: redesenha só quando busca, seleção, hover ou zoom mudam
+    const k = [camadaZ, cam.z.toFixed(2), est.casa ? est.resultado.length + '|' + est.q + '|' + [...est.areas] + '|' + est.tipo + '|' + (est.depto ? est.depto.id : '') : '-', est.sel, hover && hover.it ? hover.it.i : -1].join('~');
+    if (k !== chaveCam) { chaveCam = k; gerarMem(); gerarSkills(); }
+    embrulho.style.transform = `translate(${ox}px, ${oy}px) scale(${cam.z / camadaZ})`;
+    const forca = cfg.layout === 'forca';
+    lay.campo.style.opacity = forca ? .45 : 1; lay.hex.style.opacity = forca ? .5 : 1;
+    lay.mem.hidden = cfg.layout !== 'aneis';
+  }
+
+  // ----- leque de arquivos ao abrir um departamento -----
+  const LEQUE_MAX = 64;
+  function leque(d) {
+    if (d.leque && d.lequeL === cfg.molas) return d.leque;
+    const L = 60 + cfg.molas * 1400; // "molas" estica o leque
+    const arr = d.itens.slice(0, LEQUE_MAX), out = [];
+    const dir = Math.atan2(d.y, d.x), abre = 1.45;
+    let k = 0, fila = 0;
+    while (k < arr.length) {
+      const cap = 9 + fila * 6, n = Math.min(cap, arr.length - k), dist = L * (0.5 + 0.34 * fila);
+      for (let j = 0; j < n; j++, k++) {
+        const t = dir - abre / 2 + (n === 1 ? abre / 2 : (j / (n - 1)) * abre) + (fila % 2 ? 0.02 : 0);
+        out.push({ it: arr[k], dx: Math.cos(t) * dist, dy: Math.sin(t) * dist });
+      }
+      fila++;
+    }
+    d.leque = out; d.lequeL = cfg.molas; d.lequeResto = d.itens.length - arr.length;
+    return out;
+  }
+
+  // ----- círculo: todos os arquivos em girassol em volta de cada departamento -----
+  function montarCirculo() {
+    for (const d of deptos) {
+      d.girassol = d.itens.map((it, k) => { const r = 4.3 * Math.sqrt(k + 7), t = (k + 7) * 2.39996; return { it, dx: Math.cos(t) * r, dy: Math.sin(t) * r }; });
+    }
+  }
+
+  // ----- força: amostra (≤36 arquivos por depto), para quando assenta -----
+  let F = null;
+  function iniciarForca() {
+    const nos = [{ x: 0, y: 0, fixo: true, centro: true }], lig = [];
+    for (const d of deptos) {
+      const id = nos.length; nos.push({ x: d.bx * .8, y: d.by * .8, vx: 0, vy: 0, d });
+      lig.push([0, id, 240]);
+      for (const it of d.itens.slice(0, 36)) { const k = nos.length; nos.push({ x: d.bx + (Math.random() - .5) * 60, y: d.by + (Math.random() - .5) * 60, vx: 0, vy: 0, it, cor: d.cor }); lig.push([id, k, 46]); }
+    }
+    F = { nos, lig, alpha: 1 };
+  }
+  function passoForca() {
+    const N = F.nos, k = cfg.molas, a = F.alpha;
+    for (let i = 1; i < N.length; i++) {
+      const n = N[i];
+      for (let j = i + 1; j < N.length; j++) {
+        const m = N[j]; let dx = n.x - m.x, dy = n.y - m.y, d2 = dx * dx + dy * dy;
+        if (d2 > 90000) continue; if (d2 < 1) { dx = Math.random(); dy = Math.random(); d2 = 1; }
+        const f = (n.d && m.d ? 1800 : n.d || m.d ? 500 : 260) / d2 * a; n.vx += dx * f; n.vy += dy * f; m.vx -= dx * f; m.vy -= dy * f;
+      }
+    }
+    for (const [i, j, rest] of F.lig) {
+      const n = N[i], m = N[j]; const dx = m.x - n.x, dy = m.y - n.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const f = (d - rest) * k * a, fx = dx / d * f, fy = dy / d * f;
+      if (!n.fixo) { n.vx += fx; n.vy += fy; } m.vx -= fx; m.vy -= fy;
+    }
+    for (let i = 1; i < N.length; i++) { const n = N[i]; n.vx *= .55; n.vy *= .55; n.x += n.vx; n.y += n.vy; if (n.d) { n.d.x = n.x; n.d.y = n.y; } }
+    F.alpha *= 0.975;
+  }
+
+  // ----- tela -----
+  function ajustar() {
+    const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
+    W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    if (camAuto) enquadrar();
+  }
+  function enquadrar() {
+    cam.z = Math.max(0.2, Math.min(1.4, (Math.min(H, W) / 2 - 16) / (R.rot + 12)));
+    cam.x = (cfg.menu && W > 900 ? 150 : 0) / cam.z; cam.y = 0; // empurra o desenho à esquerda quando o menu está aberto
+    camadaZ = 0;
+  }
+
+  function desenharDepto(d, sx, sy, z) {
+    const r = Math.max(11, 17 * Math.sqrt(z / 0.6));
+    const ativo = abertos.has(d.id) || (est.depto && est.depto.id === d.id), sobre = hover && hover.t === 'dep' && hover.d === d;
+    const casaN = est.casa && (est.termos?.length || est.areas.size || est.tipo) ? d.itens.reduce((s, it) => s + (est.casa.has(it.i) ? 1 : 0), 0) : -1;
+    const apagado = casaN === 0 || (est.depto && est.depto.id !== d.id && !abertos.has(d.id));
+    ctx.globalAlpha = apagado ? 0.3 : 1;
+    const gl = brilho(d.cor), gt = r * (sobre || ativo ? 5.2 : 4);
+    ctx.drawImage(gl, sx - gt / 2, sy - gt / 2, gt, gt);
+    ctx.fillStyle = d.cor; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.2832); ctx.fill();
+    if (ativo || sobre) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, r + 3.5, 0, 6.2832); ctx.stroke(); }
+    icone(d.icone, sx, sy, r * 1.05, '#070A1F', 2);
+    ctx.font = `700 ${Math.max(10, Math.round(11 * Math.sqrt(z / 0.6)))}px ${FONTE}`; ctx.letterSpacing = '1.5px';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#E8EBF5';
+    ctx.fillText(d.nome, sx, sy + r + 7);
+    if (casaN > 0) { ctx.font = `600 10px ${FONTE}`; ctx.letterSpacing = '0px'; ctx.fillStyle = LAR; ctx.fillText(casaN.toLocaleString('pt-BR') + ' na busca', sx, sy + r + 22); }
+    ctx.letterSpacing = '0px'; ctx.globalAlpha = 1;
+    alvos.push({ t: 'dep', d, x: sx, y: sy, r: r + 4 });
+  }
+
+  const FONTE = getComputedStyle(document.body).fontFamily;
+  function desenhar() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    alvos.length = 0;
+    if (cfg.layout === 'forca' && F && camAuto) { // enquadra a física enquanto ela assenta
+      let x0 = 0, y0 = 0, x1 = 0, y1 = 0; for (const n of F.nos) { if (n.x < x0) x0 = n.x; if (n.x > x1) x1 = n.x; if (n.y < y0) y0 = n.y; if (n.y > y1) y1 = n.y; }
+      const livre = cfg.menu && W > 900 ? 300 : 0;
+      cam.z = Math.max(0.2, Math.min(1.2, (W - livre - 80) / (x1 - x0 + 1), (H - 80) / (y1 - y0 + 1)));
+      cam.x = (x0 + x1) / 2 + livre / 2 / cam.z; cam.y = (y0 + y1) / 2;
+    }
+    const z = cam.z, ox = W / 2 - cam.x * z, oy = H / 2 - cam.y * z;
+    const S = (x, y) => [ox + x * z, oy + y * z];
+    const casa = est.casa, L = cfg.layout;
+    conferirCamadas(ox, oy);
+
+    // anéis
+    const anel = (r, cor, lw, al) => { ctx.globalAlpha = al; ctx.strokeStyle = cor; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(ox, oy, r * z, 0, 6.2832); ctx.stroke(); };
+    anel(R.skills, LAR, 1.6, .85);
+    if (L === 'aneis') { anel(R.memLinha, '#9540F4', 1.2, .5); anel(R.rot, '#F2C661', 1.8, .85); anel(R.fontes, '#4D74FF', 1.6, .8); }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '3px';
+    const tl = (txt, y, cor, px) => { ctx.font = `700 ${px}px ${FONTE}`; ctx.fillStyle = cor; ctx.fillText(txt, ox, oy + y * z); };
+    tl('SKILLS', -R.skills * 0.56, LAR, Math.max(13, Math.round(24 * z)));
+    if (L === 'aneis') {
+      tl('MEMORY', -(R.memIn - 26), '#A98BFF', Math.max(12, Math.round(22 * z)));
+      tl('ROUTINES', -(R.rot - 24), '#F2C661', Math.max(12, Math.round(22 * z)));
+      tl('FONTES', -(R.fontes - 22), '#7F9BFF', Math.max(10, Math.round(15 * z)));
+    }
+    ctx.letterSpacing = '0px';
+
+    const ponto = (lista, cor, r, al) => { if (!lista.length) return; ctx.globalAlpha = al; ctx.fillStyle = cor; ctx.beginPath(); for (const [x, y] of lista) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.2832); } ctx.fill(); };
+    // (skills e memórias ficam nas camadas que giram — ver conferirCamadas)
+    if (L === 'aneis') {
+      // rotinas no anel ROUTINES
+      for (const p of rotPos) {
+        const a = p.a; const [x, y] = S(Math.cos(a) * p.r, Math.sin(a) * p.r);
+        const ap = casa && !casa.has(p.it.i);
+        ctx.globalAlpha = ap ? .3 : 1;
+        if (p.grande) {
+          const r = Math.max(8, 12 * z); const gt = r * 4; ctx.drawImage(brilho('#F2C661'), x - gt / 2, y - gt / 2, gt, gt);
+          ctx.fillStyle = '#070A1F'; ctx.strokeStyle = '#F2C661'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); ctx.stroke();
+          icone('relogio', x, y, r * 1.2, '#F2C661', 1.5);
+          if (z > 0.45) { ctx.font = `600 10px ${FONTE}`; ctx.fillStyle = 'rgba(242,198,97,.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(p.it.t, x, y + r + 4); }
+          alvos.push({ t: 'arq', it: p.it, x, y, r: r + 2 });
+        } else {
+          const r = Math.max(1.6, 3 * z); ctx.fillStyle = '#F8DE9C'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+          alvos.push({ t: 'arq', it: p.it, x, y, r: r + 3 });
+        }
+      }
+      ctx.globalAlpha = 1;
+      // fontes no anel azul (hexágonos)
+      for (const f of FONTES) {
+        const [x, y] = S(Math.cos(f.ang) * R.fontes, Math.sin(f.ang) * R.fontes); const r = Math.max(10, 15 * z);
+        const ativa = est.areas.has(f.a);
+        ctx.fillStyle = 'rgba(11,15,42,.95)'; ctx.strokeStyle = ativa ? '#fff' : '#4D74FF'; ctx.lineWidth = ativa ? 2.2 : 1.6; ctx.beginPath();
+        for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; v ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        icone(f.icone, x, y, r * 0.95, '#C9D3FF', 1.5);
+        alvos.push({ t: 'fonte', f, x, y, r: r + 2 });
+      }
+    }
+
+    // curvas centro → departamentos
+    const [cx0, cy0] = S(0, 0);
+    if (L === 'forca' && F) {
+      ctx.globalAlpha = .35; ctx.lineWidth = 1;
+      for (const d of deptos) {
+        ctx.strokeStyle = d.cor; ctx.beginPath();
+        const [dx, dy] = S(d.x, d.y);
+        for (const n of F.nos) if (n.it && n.cor === d.cor) { const [x, y] = S(n.x, n.y); ctx.moveTo(dx, dy); ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.lineWidth = 1.5;
+    for (const d of deptos) {
+      const [x, y] = S(d.x, d.y);
+      const mx = (cx0 + x) / 2, my = (cy0 + y) / 2, nx = -(y - cy0), ny = x - cx0;
+      const gr = ctx.createLinearGradient(cx0, cy0, x, y); gr.addColorStop(0, hexA(d.cor, .15)); gr.addColorStop(1, hexA(d.cor, .9));
+      ctx.strokeStyle = gr; ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.quadraticCurveTo(mx + nx * 0.16, my + ny * 0.16, x, y); ctx.stroke();
+    }
+
+    // arquivos: leques (anéis), girassol (círculo) ou amostra (força)
+    const agora = performance.now(); let animandoLeque = false;
+    const comNomes = cfg.nomes;
+    const lequeComNome = hover && hover.t === 'dep' && abertos.has(hover.d.id) ? hover.d.id : ultimoLeque; // nomes só de UM leque por vez
+    for (const d of deptos) {
+      const [x, y] = S(d.x, d.y);
+      let pts = null, p = 1;
+      if (L === 'circulo') pts = d.girassol;
+      else if (L === 'aneis' && abertos.has(d.id)) {
+        pts = leque(d); const t0 = abrindo.get(d.id);
+        if (t0 !== undefined && !reduz) { p = Math.min(1, (agora - t0) / 280); p = 1 - (1 - p) ** 3; if (p < 1) animandoLeque = true; else abrindo.delete(d.id); }
+      }
+      if (!pts) continue;
+      const vivo = [], apag = [], rr = L === 'circulo' ? Math.max(1, 1.9 * z) : Math.max(1.8, 3.2 * z);
+      if (L === 'aneis') { ctx.strokeStyle = hexA(d.cor, .38); ctx.lineWidth = 0.7; ctx.beginPath(); }
+      for (const q of pts) {
+        const px = x + q.dx * z * p, py = y + q.dy * z * p;
+        if (L === 'aneis') { ctx.moveTo(x, y); ctx.lineTo(px, py); }
+        (casa && !casa.has(q.it.i) ? apag : vivo).push([px, py]);
+        alvos.push({ t: 'arq', it: q.it, x: px, y: py, r: rr + 2.5 });
+      }
+      if (L === 'aneis') ctx.stroke();
+      ponto(apag, d.cor, rr, .2); ponto(vivo, d.cor, rr, 1);
+      if (comNomes && L === 'aneis' && p === 1 && d.id === lequeComNome) {
+        ctx.font = `500 10px ${FONTE}`; ctx.fillStyle = 'rgba(232,235,245,.82)'; ctx.textBaseline = 'middle';
+        for (const q of pts.slice(0, 60)) { const px = x + q.dx * z, py = y + q.dy * z; ctx.textAlign = q.dx >= 0 ? 'left' : 'right'; const t = q.it.t.length > 28 ? q.it.t.slice(0, 27) + '…' : q.it.t; ctx.fillText(t, px + (q.dx >= 0 ? 5 : -5), py); }
+      }
+      if (L === 'aneis' && d.lequeResto > 0 && p === 1) {
+        const ult = pts[pts.length - 1]; ctx.font = `600 10px ${FONTE}`; ctx.fillStyle = hexA(d.cor, .9); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const ex = x + Math.cos(Math.atan2(d.y, d.x)) * (Math.hypot(ult.dx, ult.dy) + 16) * z, ey = y + Math.sin(Math.atan2(d.y, d.x)) * (Math.hypot(ult.dx, ult.dy) + 16) * z;
+        ctx.fillText(`+${d.lequeResto} na Lista`, ex, ey);
+      }
+    }
+    if (L === 'forca' && F) {
+      for (const d of deptos) {
+        const vivo = [], apag = [], rr = Math.max(1.6, 2.8 * z);
+        for (const n of F.nos) if (n.it && n.cor === d.cor) { const [x, y] = S(n.x, n.y); (casa && !casa.has(n.it.i) ? apag : vivo).push([x, y]); alvos.push({ t: 'arq', it: n.it, x, y, r: rr + 2.5 }); }
+        ponto(apag, d.cor, rr, .2); ponto(vivo, d.cor, rr, 1);
+        if (comNomes) { ctx.font = `500 10px ${FONTE}`; ctx.fillStyle = 'rgba(232,235,245,.75)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; for (const n of F.nos) if (n.it && n.cor === d.cor) { const [x, y] = S(n.x, n.y); ctx.fillText(n.it.t.slice(0, 26), x + 5, y); } }
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // departamentos por cima
+    for (const d of deptos) { const [x, y] = S(d.x, d.y); desenharDepto(d, x, y, z); }
+
+    // centro: CLAUDE.md
+    {
+      const r = Math.max(14, 22 * Math.sqrt(z / 0.6)), gt = r * 6;
+      ctx.drawImage(brilho(LAR), cx0 - gt / 2, cy0 - gt / 2, gt, gt);
+      ctx.fillStyle = '#0B0F2A'; ctx.strokeStyle = LAR; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(cx0, cy0, r, 0, 6.2832); ctx.fill(); ctx.stroke();
+      if (nucleo && est.sel === nucleo.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx0, cy0, r + 4, 0, 6.2832); ctx.stroke(); }
+      icone('doc', cx0, cy0, r * 1.05, '#fff', 1.8);
+      ctx.font = `700 ${Math.max(10, Math.round(12 * Math.sqrt(z / 0.6)))}px ${FONTE}`; ctx.letterSpacing = '1.5px'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('CLAUDE.MD', cx0, cy0 + r + 8); ctx.letterSpacing = '0px';
+      alvos.push({ t: 'centro', x: cx0, y: cy0, r: r + 3 });
+    }
+
+    // seleção / hover em arquivo
+    const marca = (it, cor) => { const a = alvos.find(v => v.t === 'arq' && v.it === it); if (!a) return; ctx.strokeStyle = cor; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(a.x, a.y, a.r + 2, 0, 6.2832); ctx.stroke(); };
+    if (est.sel >= 0) marca(ITENS[est.sel], '#fff');
+    if (hover && hover.t === 'arq') marca(hover.it, LAR);
+    return animandoLeque;
+  }
+
+  // ----- laço (≤30 fps, só quando precisa) -----
+  // Entre quadros o laço dorme num setTimeout (não pede rAF a cada vsync à toa).
+  let raf = 0, espera = 0, ultimo = 0, pendente = false;
+  const girando = () => cfg.giro > 0 && !reduz && cfg.layout !== 'forca';
+  const precisaRedesenhar = () => (F && cfg.layout === 'forca' && F.alpha > 0.02) || abrindo.size > 0;
+  const fpsGiro = () => cfg.giro > 0.5 ? 20 : cfg.giro > 0.3 ? 12 : 8;
+  function agendar(ms) { clearTimeout(espera); espera = setTimeout(() => { espera = 0; if (!raf) raf = requestAnimationFrame(quadro); }, Math.max(0, ms)); }
+  function quadro(t) {
+    raf = 0;
+    if (document.hidden || est.vista !== 'aneis') return;
+    const dt = Math.min(0.25, ultimo ? (t - ultimo) / 1000 : 0); ultimo = t;
+    if (girando()) { ang.campo += dt * VEL.campo * cfg.giro; ang.skills += dt * VEL.skills * cfg.giro; girarCamadas(); }
+    if (cfg.layout === 'forca' && F && F.alpha > 0.02) { passoForca(); passoForca(); }
+    if (pendente || precisaRedesenhar()) { pendente = false; desenhar(); }
+    if (precisaRedesenhar()) agendar(33 - (performance.now() - t)); // ≤30 fps em transição/física
+    else if (girando()) agendar(1000 / fpsGiro() - (performance.now() - t));
+    else ultimo = 0;
+  }
+  function pedir() { pendente = true; if (document.hidden || est.vista !== 'aneis') return; clearTimeout(espera); espera = 0; if (!raf) raf = requestAnimationFrame(quadro); }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { ultimo = 0; pedir(); } });
+
+  // ----- interação -----
+  function alvoEm(sx, sy) {
+    for (let k = alvos.length - 1; k >= 0; k--) { const a = alvos[k]; if (a.t === 'arq') continue; if ((a.x - sx) ** 2 + (a.y - sy) ** 2 <= a.r * a.r) return a; }
+    let best = null, bd = Infinity;
+    const z = cam.z, ox = W / 2 - cam.x * z, oy = H / 2 - cam.y * z;
+    const testa = (it, wx, wy, r) => { const x = ox + wx * z, y = oy + wy * z, d = (x - sx) ** 2 + (y - sy) ** 2; if (d <= r * r && d < bd) { bd = d; best = { t: 'arq', it, x, y, r }; } };
+    { const as = angDe('skills'), r = Math.max(1.3, 2.4 * z) + 3; skillsArr.forEach((it, k) => { const a = as + (k / skillsArr.length) * Math.PI * 2; testa(it, Math.cos(a) * R.skills, Math.sin(a) * R.skills, r); }); }
+    if (cfg.layout === 'aneis') { const am = angDe('mem'), r = Math.max(1.2, 2.6 * z) + 2.5; for (const p of memPos) { const a = am + p.a; testa(p.it, Math.cos(a) * p.r, Math.sin(a) * p.r, r); } }
+    for (const a of alvos) { if (a.t !== 'arq') continue; const d = (a.x - sx) ** 2 + (a.y - sy) ** 2; if (d <= a.r * a.r && d < bd) { bd = d; best = a; } }
+    return best;
+  }
+  const dica = $('#dicaA');
+  function mostrarDica(a, sx, sy) {
+    if (!a) { dica.hidden = true; return; }
+    let h;
+    if (a.t === 'dep') h = `<b>${esc(a.d.nome)}</b><span>Departamento · ${a.d.itens.length.toLocaleString('pt-BR')} arquivos — clique para filtrar</span>`;
+    else if (a.t === 'centro') h = `<b>CLAUDE.md</b><span>${nucleo ? esc(curto(nucleo.p)) : 'não indexado'} — clique para abrir</span>`;
+    else if (a.t === 'fonte') h = `<b>${esc(a.f.nome)}</b><span>Fonte · ${(contaArea[a.f.a] || 0).toLocaleString('pt-BR')} arquivos — clique para filtrar</span>`;
+    else h = `<b>${esc(a.it.t)}</b><span>${esc(curto(a.it.p))}</span>`;
+    dica.innerHTML = h; dica.hidden = false;
+    const w = dica.offsetWidth; dica.style.left = Math.min(sx + 14, W - w - 8) + 'px'; dica.style.top = (sy + 12) + 'px';
+  }
+  let arrasto = null, moveu = false, hoverPend = null;
+  cv.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); arrasto = { sx: e.clientX - r.left, sy: e.clientY - r.top, cx: cam.x, cy: cam.y }; moveu = false; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => {
+    const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    if (arrasto) {
+      if (Math.abs(sx - arrasto.sx) + Math.abs(sy - arrasto.sy) > 3) moveu = true;
+      if (moveu) { cv.classList.add('arrastando'); camAuto = false; cam.x = arrasto.cx - (sx - arrasto.sx) / cam.z; cam.y = arrasto.cy - (sy - arrasto.sy) / cam.z; dica.hidden = true; pedir(); }
+      return;
+    }
+    if (hoverPend) return; // no máx. 1 teste de alvo por quadro
+    hoverPend = requestAnimationFrame(() => {
+      hoverPend = null;
+      const a = alvoEm(sx, sy);
+      const mesmo = (a && hover && a.t === hover.t && a.d === hover.d && a.it === hover.it && a.f === hover.f) || (!a && !hover);
+      hover = a; cv.style.cursor = a ? 'pointer' : '';
+      mostrarDica(a, sx, sy);
+      if (!mesmo) pedir();
+    });
+  });
+  cv.addEventListener('pointerup', (e) => {
+    const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    cv.classList.remove('arrastando');
+    const foi = arrasto && !moveu; arrasto = null;
+    if (!foi) return;
+    const a = alvoEm(sx, sy);
+    if (!a) return;
+    if (a.t === 'dep') clicarDepto(a.d);
+    else if (a.t === 'centro') { if (nucleo) selecionar(nucleo.i); }
+    else if (a.t === 'fonte') alternarArea(a.f.a);
+    else selecionar(a.it.i);
+  });
+  cv.addEventListener('pointerleave', () => { dica.hidden = true; if (hover) { hover = null; pedir(); } });
+  cv.addEventListener('wheel', (e) => {
+    e.preventDefault(); camAuto = false;
+    const r = cv.getBoundingClientRect(); const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const wx = (sx - W / 2) / cam.z + cam.x, wy = (sy - H / 2) / cam.z + cam.y;
+    cam.z = Math.min(4, Math.max(0.2, cam.z * Math.exp(-e.deltaY * 0.0015)));
+    cam.x = wx - (sx - W / 2) / cam.z; cam.y = wy - (sy - H / 2) / cam.z;
+    pedir();
+  }, { passive: false });
+  cv.addEventListener('dblclick', () => { camAuto = true; enquadrar(); pedir(); });
+
+  function clicarDepto(d) {
+    if (cfg.layout === 'aneis') {
+      if (abertos.has(d.id) && est.depto && est.depto.id === d.id) { abertos.delete(d.id); filtrarDepto(null); return; }
+      abertos.add(d.id); abrindo.set(d.id, performance.now()); ultimoLeque = d.id;
+    }
+    filtrarDepto(est.depto && est.depto.id === d.id ? null : d);
+  }
+  function filtrarDepto(d) {
+    est.depto = d ? { id: d.id, nome: d.nome, set: d.set } : null;
+    $('#filtroDepto').innerHTML = d ? `<span class="filtro-depto">${esc(d.nome)}<button aria-label="Tirar filtro de departamento">×</button></span>` : '';
+    atualizar();
+  }
+  $('#filtroDepto').addEventListener('click', (e) => { if (e.target.closest('button')) filtrarDepto(null); });
+
+  // ----- menu -----
+  function menu(aberto) {
+    cfg.menu = aberto; salvar();
+    $('#menu').hidden = !aberto; $('#menuBtn').setAttribute('aria-expanded', aberto);
+    if (camAuto) { enquadrar(); pedir(); }
+  }
+  $('#menuBtn').onclick = () => menu($('#menu').hidden);
+  function marcarSeg(sel, v) { document.querySelectorAll(sel + ' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
+  $('#segLayout').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    cfg.layout = b.dataset.v; salvar(); marcarSeg('#segLayout', cfg.layout);
+    posicionar(); if (cfg.layout === 'forca') iniciarForca();
+    camAuto = true; enquadrar(); pedir(); notas();
+  });
+  $('#segVisao').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    cfg.visao = b.dataset.v; salvar(); marcarSeg('#segVisao', cfg.visao);
+    abertos.clear(); montarDeptos(); pedir();
+  });
+  $('#giro').addEventListener('input', (e) => { cfg.giro = +e.target.value; salvar(); aplicarGiro(); });
+  $('#nomes').addEventListener('change', (e) => { cfg.nomes = e.target.checked; salvar(); pedir(); });
+  $('#molas').addEventListener('input', (e) => {
+    cfg.molas = +e.target.value; $('#molasV').textContent = cfg.molas.toFixed(3).replace(/0$/, ''); salvar();
+    for (const d of deptos) d.leque = null;
+    if (cfg.layout === 'forca' && F) F.alpha = Math.max(F.alpha, 0.5);
+    pedir();
+  });
+  $('#expandir').onclick = () => { if (cfg.layout !== 'aneis') { cfg.layout = 'aneis'; marcarSeg('#segLayout', 'aneis'); posicionar(); } const t = performance.now(); for (const d of deptos) { abertos.add(d.id); abrindo.set(d.id, t); } pedir(); };
+  $('#recolher').onclick = () => { abertos.clear(); abrindo.clear(); if (est.depto) filtrarDepto(null); else pedir(); };
+  function notas() {
+    $('#notaMenu').innerHTML = (reduz ? 'Movimento reduzido ativo no sistema: anéis parados. ' : '') +
+      (cfg.layout === 'forca' ? 'Força mostra até 36 arquivos recentes por departamento e para sozinha quando assenta. ' : '') +
+      (cfg.layout === 'circulo' ? 'Círculo mostra todos os arquivos em volta de cada departamento. ' : '') +
+      'Clique num departamento para abrir e filtrar · duplo clique recentraliza · roda dá zoom.';
+  }
+  $('#giro').value = cfg.giro; $('#giro').disabled = reduz; $('#nomes').checked = cfg.nomes; $('#molas').value = cfg.molas; $('#molasV').textContent = String(cfg.molas);
+  marcarSeg('#segLayout', cfg.layout); marcarSeg('#segVisao', cfg.visao); notas(); aplicarGiro();
+  if (!cfg.menu || innerWidth < 900) { $('#menu').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); }
+
+  // legenda das camadas (contagem real)
+  $('#camadas').innerHTML = [
+    ['#5B7FFF', 'SKILLS', (contaArea.skills || 0) + ' skills'],
+    ['#A98BFF', 'MEMORY', (contaArea.memoria || 0) + ' memórias'],
+    ['#F2C661', 'ROUTINES', timers.length + ' timers · ' + relatRot.length + ' relatórios'],
+    ['#4D74FF', 'FONTES', FONTES.length + ' pastas de origem'],
+  ].map(([c, n, t]) => `<span><i style="background:${c}"></i><b>${n}</b> ${t}</span>`).join('');
+
+  window.addEventListener('resize', () => { if (est.vista === 'aneis') { ajustar(); pedir(); } });
+
+  return {
+    iniciar() { if (!iniciado) { iniciado = true; montarDeptos(); } ajustar(); pedir(); },
+    parar() { if (raf) cancelAnimationFrame(raf); raf = 0; clearTimeout(espera); espera = 0; dica.hidden = true; },
+    pedir, menu, filtrarDepto,
+    _debug: () => ({ cfg, deptos: deptos.map(d => [d.nome, d.itens.length]), alvos: alvos.length, cam }),
+    _alvoDep: (nome) => { const a = alvos.find(v => v.t === 'dep' && v.d.nome === nome); if (!a) return null; const r = cv.getBoundingClientRect(); return { x: a.x + r.left, y: a.y + r.top }; },
+  };
+})();
+
+// ---------- ciclo ----------
+let renderListaTardia = false;
+function atualizar() {
+  buscar();
+  $('#info').textContent = `${est.resultado.length.toLocaleString('pt-BR')} de ${ITENS.length.toLocaleString('pt-BR')} · ${est.ms.toFixed(1)} ms`;
+  if (est.vista === 'lista') renderLista(); else renderListaTardia = true;
+  if (est.vista === 'grafo') desenhar();
+  if (est.vista === 'projetos') renderProjetos();
+  if (est.vista === 'aneis') A.pedir();
+}
+
+const g = new Date(IDX.gerado);
+$('#rodape').innerHTML = `índice gerado em ${g.toLocaleString('pt-BR')} · ${ITENS.length.toLocaleString('pt-BR')} arquivos · ${IDX.arestas} ligações · rode <code>node ~/.claude/agentic-os/cerebro/indexar.mjs</code> para atualizar`;
+
+atualizar();
+let inicial = 'aneis';
+try { const v = localStorage.getItem('cerebro.vista'); if (v) inicial = v; } catch {}
+const pedido = new URLSearchParams(location.search).get('vista');
+if (pedido) inicial = pedido;
+if (!['aneis', 'lista', 'grafo', 'projetos'].includes(inicial)) inicial = 'aneis';
+trocarVista(inicial);
+window.__cerebro = { A, est };
+})();
+</script>
+</body>
+</html>
