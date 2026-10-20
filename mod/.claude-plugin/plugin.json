@@ -1,0 +1,1 @@
+{ "name": "painel-escritorio", "version": "1.0.0", "description": "Painel do Agentic OS: sessões do Claude abertas, subagentes e PRs desta sessão, checklist de cada sessão, notas recentes, artefatos, manutenção da máquina, rotinas, deck de skills, saúde dos ambientes, custo de contexto, botão da Central e entrega das respostas da Central", "types": "./types/index.d.ts" }

@@ -1,0 +1,5 @@
+{
+  "name": "agentic-os",
+  "owner": { "name": "agentic-os" },
+  "plugins": [{ "name": "painel-escritorio", "source": "./" }]
+}
