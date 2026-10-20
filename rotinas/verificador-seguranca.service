@@ -1,0 +1,13 @@
+# NASCE DESABILITADA. Esta rotina consome cota do plano Claude a cada execução (custo
+# recorrente = porta única). Não é ligada na instalação. Para ligar, depois de você aprovar o custo:
+#   systemctl --user enable --now verificador-seguranca.timer
+# Teto semanal e custo: rotinas/README.md.
+[Unit]
+Description=Agentic OS — Segurança (portas, dependências, segredos, headers) dos ambientes de teste
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h
+ExecStart=/usr/bin/env node %h/.claude/agentic-os/rotinas/rodar-verificador.mjs verificador-seguranca
+TimeoutStartSec=45min
+Nice=10

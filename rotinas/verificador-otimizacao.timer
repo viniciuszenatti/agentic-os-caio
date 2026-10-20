@@ -1,0 +1,16 @@
+# opcional — cada execução gasta cota do plano Claude
+# NASCE DESABILITADA. Esta rotina consome cota do plano Claude a cada execução (custo
+# recorrente = porta única). Não é ligada na instalação. Para ligar, depois de você aprovar o custo:
+#   systemctl --user enable --now verificador-otimizacao.timer
+# Teto semanal e custo: rotinas/README.md.
+[Unit]
+Description=Agentic OS — Otimização (tempo de API e processo no DEV): quarta 03:00 (teto 1x por semana)
+
+[Timer]
+OnCalendar=Wed *-*-* 03:00:00
+Persistent=false
+RandomizedDelaySec=10min
+Unit=verificador-otimizacao.service
+
+[Install]
+WantedBy=timers.target

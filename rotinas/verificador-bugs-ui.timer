@@ -1,0 +1,16 @@
+# opcional — cada execução gasta cota do plano Claude
+# NASCE DESABILITADA. Esta rotina consome cota do plano Claude a cada execução (custo
+# recorrente = porta única). Não é ligada na instalação. Para ligar, depois de você aprovar o custo:
+#   systemctl --user enable --now verificador-bugs-ui.timer
+# Teto semanal e custo: rotinas/README.md.
+[Unit]
+Description=Agentic OS — Bugs e interface (fluxos no DEV, 3 larguras, tema escuro): terça 03:00 (teto 1x por semana)
+
+[Timer]
+OnCalendar=Tue *-*-* 03:00:00
+Persistent=false
+RandomizedDelaySec=10min
+Unit=verificador-bugs-ui.service
+
+[Install]
+WantedBy=timers.target
