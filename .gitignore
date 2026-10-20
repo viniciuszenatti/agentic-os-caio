@@ -1,0 +1,27 @@
+node_modules/
+*.bak*
+*.log
+.DS_Store
+.playwright-cli/
+# dados locais gerados pela Central e pelas rotinas (não são código)
+*.token
+.env
+.env.*
+central/escala/ultimo-*.json
+central/escala/carga-*.json
+central/escala.jsonl
+central/score.jsonl
+central/layout.json
+central/papeis.json
+central/score-pesos.json
+central/score-fontes.json
+central/escala-fontes.json
+central/nuvem-repos.json
+cerebro/indice.json
+cerebro/indice.js
+planos/
+lideres/
+verificadores/
+fila-respostas/
+revisao/
+rotinas/execucoes.jsonl
