@@ -1,0 +1,6 @@
+[Unit]
+Description=Saúde dos ambientes (GET de leitura nos alvos de ~/.claude/limpeza/alvos.json, grava saude.json)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/limpeza/saude.mjs

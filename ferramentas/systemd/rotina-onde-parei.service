@@ -1,0 +1,11 @@
+[Unit]
+Description=Onde parei? por projeto da pasta de projetos (só leitura)
+# Pasta dos repositórios: padrão ~/Projects. Para trocar, descomente:
+# Environment=AGENTIC_OS_PROJETOS=%h/Projects
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/onde-parei.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=180

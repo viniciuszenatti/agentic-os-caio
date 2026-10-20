@@ -1,0 +1,7 @@
+# Nomes que NUNCA devem aparecer no estado das rotinas nem na Central (clientes, pessoas, projetos sigilosos).
+# Copie para ~/.claude/rotinas/nomes-sensiveis.txt e troque pelos seus. Arquivo opcional.
+# Um padrão regex por linha, sem diferenciar maiúsculas. Cada ocorrência vira "[cliente]".
+# Linhas começando com # são comentário.
+cliente\s*exemplo
+loja[- ]fict[ií]cia
+projeto-sigiloso

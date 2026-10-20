@@ -1,0 +1,9 @@
+[Unit]
+Description=Saúde das rotinas: timers de usuário falhos ou atrasados (só leitura)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/saude-rotinas.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=120

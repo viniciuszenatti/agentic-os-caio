@@ -1,0 +1,7 @@
+[Unit]
+Description=Diagnóstico semanal da máquina (/limpeza, só leitura)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash %h/.claude/skills/limpeza/rotina-semanal.sh
+Nice=10

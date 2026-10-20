@@ -1,0 +1,9 @@
+[Unit]
+Description=Bom dia: o que ficou aberto/bloqueado no último fechamento (1x por dia, sem IA)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/bom-dia.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=60

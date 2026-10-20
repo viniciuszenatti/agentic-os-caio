@@ -1,0 +1,10 @@
+[Unit]
+Description=Fechamento do dia: placar das frentes + linha do tempo (rotina local, sem IA)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/fechamento-do-dia.mjs
+# Para encadear outro passo sem travar se ele falhar, acrescente: ExecStart=-/usr/bin/node %h/.claude/rotinas/<outro>.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=120

@@ -1,0 +1,9 @@
+[Unit]
+Description=Seg–sex de 2 em 2 h, 9h–19h: lembrete de commit
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 09..19/2:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=De 2 em 2 h (8h–20h): reindexa o segundo cérebro
+
+[Timer]
+OnCalendar=*-*-* 08..20/2:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

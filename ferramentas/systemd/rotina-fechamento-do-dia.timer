@@ -1,0 +1,9 @@
+[Unit]
+Description=Seg–sex 18:00: fechamento do dia
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 18:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

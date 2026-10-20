@@ -1,0 +1,9 @@
+[Unit]
+Description=Capacidade do PC (PSI, RAM, swap, CPU, temperatura, RAPL) — avisa por nível
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/capacidade.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=60

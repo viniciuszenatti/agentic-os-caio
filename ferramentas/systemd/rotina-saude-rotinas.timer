@@ -1,0 +1,10 @@
+[Unit]
+Description=A cada 30 min: saúde das rotinas (vigia dos vigias)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Seg–sex a cada 10 min, 8h–20h: vigia de CI
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 08..19:00/10:00
+OnCalendar=Mon..Fri *-*-* 20:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

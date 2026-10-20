@@ -1,0 +1,10 @@
+[Unit]
+Description=Ao entrar na sessão (3 min depois) e seg–sex 8:30: bom dia (1x por dia)
+
+[Timer]
+OnStartupSec=3min
+OnCalendar=Mon..Fri *-*-* 08:30:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

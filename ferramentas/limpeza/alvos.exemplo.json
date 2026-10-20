@@ -1,0 +1,5 @@
+[
+  { "ambiente": "DEV", "nome": "Portal", "url": "https://dev.exemplo.com/" },
+  { "ambiente": "DEV", "nome": "API (healthz)", "url": "https://dev.exemplo.com/healthz" },
+  { "ambiente": "HML", "nome": "Portal", "url": "https://hml.exemplo.com/" }
+]

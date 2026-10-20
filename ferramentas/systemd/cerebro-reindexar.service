@@ -1,0 +1,7 @@
+[Unit]
+Description=Reindexa o segundo cérebro (~3 s, só leitura nas pastas)
+
+[Service]
+Type=oneshot
+Nice=10
+ExecStart=/usr/bin/node %h/.claude/agentic-os/cerebro/indexar.mjs

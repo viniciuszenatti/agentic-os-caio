@@ -1,0 +1,9 @@
+[Unit]
+Description=A cada 15 min: saúde dos ambientes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+
+[Install]
+WantedBy=timers.target

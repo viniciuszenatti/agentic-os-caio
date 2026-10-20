@@ -1,0 +1,10 @@
+[Unit]
+Description=Vigia de CI dos seus PRs abertos (gh, só leitura; precisa do gh logado)
+# Environment=AGENTIC_OS_PROJETOS=%h/Projects
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.claude/rotinas/vigia-ci.mjs
+WorkingDirectory=%h/.claude/rotinas
+Nice=10
+TimeoutStartSec=300

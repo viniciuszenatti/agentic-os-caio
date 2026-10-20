@@ -1,0 +1,9 @@
+[Unit]
+Description=Toda segunda 9h: diagnóstico da máquina (/limpeza)
+
+[Timer]
+OnCalendar=Mon *-*-* 09:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
