@@ -144,11 +144,19 @@ crie as tarefas à mão (nada disso é automático, e nenhuma delas chama IA):
 ```powershell
 $node = (Get-Command node).Source
 $os = "$HOME\.claude\agentic-os"
-schtasks /Create /TN "AgenticOS\Central" /SC ONLOGON /TR "`"$node`" `"$os\central\server.mjs`""
-schtasks /Create /TN "AgenticOS\Cerebro" /SC DAILY /ST 03:00 /TR "`"$node`" `"$os\cerebro\indexar.mjs`""
-schtasks /Query /TN "AgenticOS\Central"     # conferir
-schtasks /Delete /TN "AgenticOS\Central" /F # desfazer
+# Central no login (as aspas em -Argument seguram caminho com espaço)
+Register-ScheduledTask -TaskName 'AgenticOS-Central' -Trigger (New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME) `
+  -Action (New-ScheduledTaskAction -Execute $node -Argument "`"$os\central\server.mjs`"" -WorkingDirectory $HOME)
+# cérebro reindexado todo dia às 03:00
+Register-ScheduledTask -TaskName 'AgenticOS-Cerebro' -Trigger (New-ScheduledTaskTrigger -Daily -At 03:00) `
+  -Action (New-ScheduledTaskAction -Execute $node -Argument "`"$os\cerebro\indexar.mjs`"")
+schtasks /Query /TN AgenticOS-Central       # conferir
+schtasks /Run /TN AgenticOS-Central         # rodar agora
+schtasks /Delete /TN AgenticOS-Central /F   # desfazer (idem AgenticOS-Cerebro)
 ```
+
+Use os cmdlets acima em vez de `schtasks /Create /TR "…"`: o Windows PowerShell 5.1 tira as aspas internas
+dos argumentos de programas externos, e um caminho com espaço quebra.
 
 Os verificadores (`rotinas/rodar-verificador.mjs <nome>`) também podem virar tarefa, mas **gastam cota do
 plano Claude**: só crie se quiser pagar por isso, e o teto semanal continua valendo.

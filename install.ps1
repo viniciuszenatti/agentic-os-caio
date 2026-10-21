@@ -20,7 +20,8 @@ $script:copiados = 0; $script:iguais = 0; $script:backups = 0
 
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) { Write-Error 'precisa do node 22+ no PATH'; exit 1 }
-$maior = [int](& node -p 'process.versions.node.split(".")[0]')
+# node --version ("v22.x.y"): sem código JS no argumento, porque o Windows PowerShell 5.1 come as aspas duplas de argumentos nativos
+$maior = [int]((& node --version).Trim().TrimStart('v').Split('.')[0])
 if ($maior -lt 22) { Write-Error "node $maior encontrado; precisa do 22+"; exit 1 }
 
 function Copia([string]$o, [string]$d) {
