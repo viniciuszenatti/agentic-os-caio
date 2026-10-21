@@ -46,6 +46,17 @@ jobs:
           $destino = Join-Path $casa '.claude\agentic-os'
           if (-not (Test-Path (Join-Path $destino 'central\server.mjs'))) { throw 'central não foi copiada' }
           if (-not (Test-Path (Join-Path $casa '.local\share\mcp-servers\cerebro\server.mjs'))) { throw 'MCP não foi copiado' }
+          # arquivo mudado no destino vira .bak antes de ser sobrescrito
+          Add-Content -Path (Join-Path $destino 'README.md') -Value 'mudança local'
+          $saida = ./install.ps1 -Casa $casa 6>&1 | Out-String
+          if ($saida -notmatch 'Placar: 1 copiados .* 1 backups') { throw "esperava 1 cópia e 1 .bak: $saida" }
+          if (-not (Get-ChildItem -Path $destino -Filter 'README.md.bak-*')) { throw 'o .bak não foi criado' }
+          # Windows PowerShell 5.1 (o que vem no Windows) também roda o instalador
+          $casa51 = Join-Path $env:RUNNER_TEMP 'casa-ps51'
+          New-Item -ItemType Directory -Force -Path $casa51 | Out-Null
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Casa $casa51
+          if ($LASTEXITCODE -ne 0) { throw 'install.ps1 falhou no Windows PowerShell 5.1' }
+          if (-not (Test-Path (Join-Path $casa51 '.claude\agentic-os\central\server.mjs'))) { throw 'PS 5.1 não copiou a central' }
           Push-Location $destino
           npm test
           if ($LASTEXITCODE -ne 0) { throw 'npm test falhou na cópia instalada' }
