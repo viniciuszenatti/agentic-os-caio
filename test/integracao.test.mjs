@@ -79,7 +79,8 @@ test('plano real: aprovar dispara local (bg) e nuvem (pty), marcar.mjs atualiza 
   assert.ok(bg, 'item local lançado com claude --bg');
   const prompt = bg.args.at(-1);
   assert.equal((prompt.match(/marcar\.mjs/g) || []).length >= 1, true, 'prompt local embrulhado com o marcar.mjs');
-  assert.ok(prompt.includes(marcador), 'marcador com caminho absoluto, alcançável de outro repo');
+  // no Windows o prompt cita o caminho com "/" (o node aceita; "\\" seria escape para o shell)
+  assert.ok(prompt.includes(process.platform === 'win32' ? marcador.replace(/\\/g, '/') : marcador), 'marcador com caminho absoluto, alcançável de outro repo');
   assert.equal(prompt.split('faça o item local').length - 1, 1, 'prompt embrulhado uma vez só');
   const nuvem = log.find((c) => c.cmd === 'python3');
   assert.ok(nuvem && nuvem.args.includes('--cloud'), 'item da nuvem vai pelo pseudo-terminal');

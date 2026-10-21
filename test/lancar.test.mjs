@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import path from 'node:path';
 
 import {
   argvLocal, argvNuvem, argvParar, argvMensagemNuvem, embrulhar, textoProjects,
@@ -303,7 +304,8 @@ test('marcar iniciou grava sessão e hora no registro ao lado do plano', async (
     { registro, fs: {}, env: { CLAUDE_CODE_SESSION_ID: 'cd76abfb-c853' }, agora: () => agora });
   assert.equal(r.codigo, 0);
   assert.equal(r.saida, 'P1 iniciado · sessão cd76abfb · 20/10 10:31');
-  assert.equal(registro.gravados[0].caminho, '/p/plano.registro.json');
+  // path.resolve: no Windows "/p" vira "D:\\p" (a unidade atual)
+  assert.equal(registro.gravados[0].caminho, path.resolve('/p/plano.registro.json'));
   assert.deepEqual(registro.gravados[0].reg.itens.P1, { evento: 'iniciou', sessao: 'cd76abfb-c853', em: agora });
 });
 
@@ -329,5 +331,5 @@ test('marcar recusa evento, id e plano inválidos, e relata erro do registro', a
 });
 
 test('caminhoDoRegistro troca .md por .registro.json', () => {
-  assert.equal(caminhoDoRegistro('/a/b/2026-10-20-x.md'), '/a/b/2026-10-20-x.registro.json');
+  assert.equal(caminhoDoRegistro('/a/b/2026-10-20-x.md'), path.resolve('/a/b/2026-10-20-x.registro.json'));
 });

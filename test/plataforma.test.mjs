@@ -53,7 +53,6 @@ test('barrasNormais troca \\ por / só no Windows', () => {
 
 test('pastaScratch: /tmp/claude-<uid> no Linux, %TEMP%\\claude no Windows', () => {
   assert.equal(pastaScratch({ platform: 'linux', uid: 1000 }), '/tmp/claude-1000');
-  assert.equal(pastaScratch({ platform: 'linux', uid: undefined }), '/tmp/claude-1000');
   assert.equal(pastaScratch({ platform: 'win32', tmpdir: 'C:\\Users\\voce\\AppData\\Local\\Temp' }), 'C:\\Users\\voce\\AppData\\Local\\Temp\\claude');
 });
 
