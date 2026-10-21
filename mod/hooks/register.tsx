@@ -8,11 +8,20 @@ const PRS_A_CADA_MS = 3 * 60_000
 const CENTRAL_URL = 'http://127.0.0.1:4747/'
 const A_CADA_FILA_MS = 15_000
 
+// Windows: o módulo não tem Node (sem process.platform); o próprio sistema põe OS=Windows_NT no ambiente.
+export async function ehWindows($: EngineInterface) {
+  return (await $.env.get('OS')) === 'Windows_NT'
+}
+const NO_WINDOWS = 'indisponível no Windows'
+
 // Caminhos montados a partir do HOME de quem roda — nada de caminho pessoal no código.
-// O módulo não tem Node (sem os.homedir), então o HOME vem do $.env; sem ele, do próprio shell.
+// O módulo não tem Node (sem os.homedir), então o HOME vem do $.env (no Windows, USERPROFILE); sem ele, do próprio shell.
+// Os caminhos usam "/": o node e o Windows aceitam.
 export async function caminhos($: EngineInterface) {
-  let home = (await $.env.get('HOME')) ?? ''
-  if (!home) {
+  const win = await ehWindows($)
+  let home = (win ? ((await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME'))) : await $.env.get('HOME')) ?? ''
+  if (win) home = home.replace(/\\/g, '/')
+  if (!home && !win) {
     const r = await $.process.run(['sh', '-c', 'cd ~ && pwd'], { timeoutMs: 5_000 }).catch(() => null)
     home = r?.exitCode === 0 ? r.stdout.trim() : ''
   }
@@ -49,6 +58,10 @@ export function alertasDoRelatorio(md: string) {
 async function diagnosticar($: EngineInterface) {
   const { limpezaScript } = await caminhos($)
   const em = await $.clock.now()
+  if (await ehWindows($)) {
+    await $.state.set(CHAVE_LIMPEZA, { rodando: null, alertas: [], resumo: `diagnóstico ${NO_WINDOWS} (o script usa bash, /proc e systemd)`, arquivo: null, em })
+    return
+  }
   await $.state.set(CHAVE_LIMPEZA, { rodando: 'diagnostico', alertas: [], resumo: 'medindo…', arquivo: null, em })
   const r = await $.process.run(['bash', limpezaScript, '--rapido'], { timeoutMs: 90_000 }).catch(() => null)
   if (!r || r.exitCode !== 0) {
@@ -67,6 +80,10 @@ async function analisarHeadless($: EngineInterface) {
   const { limpezaScript, limpezaDir } = await caminhos($)
   const em = await $.clock.now()
   const antes = (await $.state.get(CHAVE_LIMPEZA)).value
+  if (await ehWindows($)) {
+    $.ui.toast(`Análise headless da limpeza ${NO_WINDOWS}`)
+    return
+  }
   await $.state.set(CHAVE_LIMPEZA, { rodando: 'analise', alertas: antes?.alertas ?? [], resumo: 'Claude analisando (headless)…', arquivo: antes?.arquivo ?? null, em })
   const saida = `${limpezaDir}/analise-ultima.md`
   const r = await $.process
@@ -136,6 +153,10 @@ async function dispararDeck($: EngineInterface, item: (typeof DECK)[number]) {
     return
   }
   const { deck: deckDir } = await caminhos($)
+  if (await ehWindows($)) {
+    $.ui.toast(`${item.rotulo} headless ${NO_WINDOWS}: rode o comando numa sessão do Claude`)
+    return
+  }
   const d = await lerDeck($)
   await $.state.set(CHAVE_DECK, { ...d, rodando: item.rotulo })
   const r = await $.process
@@ -166,11 +187,21 @@ type RespostaNaFila = { sessionId: string; nome?: string; texto: string; arquivo
 
 // Entrega as respostas escritas na Central. Cada arquivo é pego por UMA sessão:
 // mv -n renomeia para .<minha-sessão>.enviando — se outra sessão pegou antes, o mv falha e ela pula.
+// No Windows não há bash: o mesmo passo em node -e, com os caminhos como argumentos (nunca dentro do código).
+const PEGAR_FILA_NODE =
+  "const fs=require('fs'),p=require('path');const[d,m]=process.argv.slice(1);let fs_=[];try{fs_=fs.readdirSync(d)}catch{process.exit(0)}" +
+  "for(const x of ['enviadas','erros'])fs.mkdirSync(p.join(d,x),{recursive:true});" +
+  "for(const f of fs_){if(!f.endsWith('.json'))continue;const n=f+'.'+m+'.enviando';try{fs.renameSync(p.join(d,f),p.join(d,n))}catch{continue}" +
+  "process.stdout.write(n+'\\t'+fs.readFileSync(p.join(d,n),'utf8').replace(/\\n/g,'')+'\\n')}"
+const MOVER_FILA_NODE =
+  "const fs=require('fs'),p=require('path');const[d,a,dest]=process.argv.slice(1);fs.renameSync(p.join(d,a),p.join(d,dest,a.replace(/\\.[^.]*\\.enviando$/,'')))"
+
 async function entregarRespostas($: EngineInterface, minha: string) {
   const { filaRespostas } = await caminhos($)
+  const win = await ehWindows($)
   const r = await $.process
     .run(
-      [
+      win ? ['node', '-e', PEGAR_FILA_NODE, filaRespostas, minha || 'sem-sessao'] : [
         'bash',
         '-c',
         'cd "$1" 2>/dev/null || exit 0; mkdir -p enviadas erros; for f in *.json; do [ -e "$f" ] || continue; d="$f.$2.enviando"; mv -n -- "$f" "$d" 2>/dev/null && [ -e "$d" ] && printf "%s\\t%s\\n" "$d" "$(tr -d "\\n" < "$d")"; done',
@@ -197,7 +228,7 @@ async function entregarRespostas($: EngineInterface, minha: string) {
       $.ui.toast(env?.isDelivered ? `Central: resposta entregue a ${item.nome ?? item.sessionId}` : `Central: não entreguei a ${item.nome ?? item.sessionId}`)
     }
     await $.process
-      .run(['bash', '-c', 'cd "$1" && mv -- "$2" "$3/${2%.*.enviando}"', '_', filaRespostas, arquivo ?? '', destino])
+      .run(win ? ['node', '-e', MOVER_FILA_NODE, filaRespostas, arquivo ?? '', destino] : ['bash', '-c', 'cd "$1" && mv -- "$2" "$3/${2%.*.enviando}"', '_', filaRespostas, arquivo ?? '', destino])
       .catch(() => null)
   }
 }
@@ -205,14 +236,26 @@ async function entregarRespostas($: EngineInterface, minha: string) {
 // 📌 Copia o artefato para fora do /tmp (scratchpad some no reboot). cp -n não sobrescreve.
 async function guardarArtefato($: EngineInterface, caminho: string, nome: string) {
   const { artefatos } = await caminhos($)
+  const win = await ehWindows($)
+  // Windows: copyFile com COPYFILE_EXCL faz o papel do cp -n (não sobrescreve); data AAAA-MM-DD sem ":" (o NTFS recusa ":")
+  const GUARDAR_NODE =
+    "const fs=require('fs'),p=require('path');const[d,o,n]=process.argv.slice(1);fs.mkdirSync(d,{recursive:true});" +
+    "const t=new Date(),z=x=>String(x).padStart(2,'0');try{fs.copyFileSync(o,p.join(d,t.getFullYear()+'-'+z(t.getMonth()+1)+'-'+z(t.getDate())+'_'+n),fs.constants.COPYFILE_EXCL)}catch(e){if(e.code!=='EEXIST')throw e}console.log('ok')"
   const r = await $.process
-    .run(['bash', '-c', 'mkdir -p "$1" && cp -n -- "$2" "$1/$(date +%Y-%m-%d)_$3" && echo ok', '_', artefatos, caminho, nome])
+    .run(win ? ['node', '-e', GUARDAR_NODE, artefatos, caminho, nome] : ['bash', '-c', 'mkdir -p "$1" && cp -n -- "$2" "$1/$(date +%Y-%m-%d)_$3" && echo ok', '_', artefatos, caminho, nome])
     .catch(() => null)
   $.ui.toast(r?.exitCode === 0 ? `📌 ${nome} guardado em ~/.claude/artefatos` : `Não guardei ${nome}`)
 }
 
 // Abre um arquivo no app padrão do sistema. setsid -f solta o app da sessão do Claude.
+// No Windows: explorer.exe (abre arquivo, pasta ou URL no programa padrão). Ele sai com código 1 mesmo quando abre.
 async function abrirArquivo($: EngineInterface, caminho: string) {
+  if (await ehWindows($)) {
+    const alvo = /^https?:/.test(caminho) ? caminho : caminho.replace(/\//g, '\\')
+    const r = await $.process.run(['explorer.exe', alvo]).catch(() => null)
+    $.ui.toast(r ? `Abrindo ${alvo.split(/[\\/]/).pop()}` : `Não consegui abrir ${alvo}`)
+    return
+  }
   const r = await $.process.run(['setsid', '-f', 'xdg-open', caminho]).catch(() => null)
   $.ui.toast(r?.exitCode === 0 ? `Abrindo ${caminho.split('/').pop()}` : `Não consegui abrir ${caminho}`)
 }
