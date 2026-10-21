@@ -19,9 +19,9 @@ central/escala-fontes.json
 central/nuvem-repos.json
 cerebro/indice.json
 cerebro/indice.js
-planos/
-lideres/
-verificadores/
-fila-respostas/
-revisao/
+/planos/
+/lideres/
+/verificadores/
+/fila-respostas/
+/revisao/
 rotinas/execucoes.jsonl

@@ -1,0 +1,4 @@
+# Finais de linha LF em todo sistema (o Windows converteria para CRLF e quebraria frontmatter, scripts .sh e testes)
+* text=auto eol=lf
+*.woff2 binary
+*.png binary
