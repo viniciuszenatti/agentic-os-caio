@@ -2,6 +2,6 @@
   "name": "agentic-os",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test 'test/**/*.test.mjs'", "central": "node central/server.mjs" },
+  "scripts": { "test": "node --test \"test/**/*.test.mjs\"", "central": "node central/server.mjs", "fumaca": "node test/fumaca.mjs" },
   "engines": { "node": ">=22" }
 }

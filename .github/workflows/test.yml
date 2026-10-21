@@ -1,0 +1,33 @@
+name: testes
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm test
+        run: npm test
+      - name: fumaça (Central + cérebro + MCP)
+        run: node test/fumaca.mjs
+        env:
+          FUMACA_PORTA: 4799
+      - name: MCP do cérebro de ponta a ponta
+        run: node ferramentas/mcp-cerebro/teste.mjs
