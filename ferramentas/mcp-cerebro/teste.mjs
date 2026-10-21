@@ -75,7 +75,8 @@ const casos = [
   ['cerebro_buscar', { consulta: 'migração', area: 'skills', tipo: 'skill', limite: 3 }, (t) => t.includes('Skill de migração')],
   ['cerebro_arquivo', { caminho: 'feedback_exemplo.md' }, (t) => t.includes('medir antes de opinar')],
   ['cerebro_arquivo', { caminho: segredo }, (t) => /bloqueado/.test(t) && !t.includes('nao-pode-aparecer')],
-  ['cerebro_arquivo', { caminho: '/etc/passwd' }, (t) => /bloqueado|não está no índice|Erro/.test(t) && !/root:/.test(t)],
+  // no Windows /etc/passwd não existe: "não existe" também é recusa
+  ['cerebro_arquivo', { caminho: '/etc/passwd' }, (t) => /bloqueado|não está no índice|não existe|Erro/.test(t) && !/root:/.test(t)],
   ['cerebro_ligacoes', { caminho: nota }, (t) => t.includes('Guia da limpeza')],
   ['cerebro_recentes', { dias: 2, limite: 5 }, (t) => t.includes('Exemplo de memória') && !t.includes('Skill de migração')],
 ];

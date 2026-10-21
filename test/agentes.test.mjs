@@ -196,7 +196,7 @@ test('argvVerificador: argv fechado, sem bypass, com teto de gasto', () => {
 });
 
 function dubles(historicoInicial = '') {
-  const arquivos = new Map([['/b/execucoes.jsonl', historicoInicial]]);
+  const arquivos = new Map([[join('/b', 'execucoes.jsonl'), historicoInicial]]);
   const chamadas = [];
   const fs = {
     async readFile(p) { if (!arquivos.has(p)) throw new Error('ENOENT'); return arquivos.get(p); },
@@ -220,7 +220,7 @@ test('rodar: dentro do teto roda e registra a execução', async () => {
   assert.equal(r.codigo, 0);
   assert.equal(d.chamadas.length, 1);
   assert.equal(d.chamadas[0][0], 'claude');
-  assert.equal(execucoesNaSemana(d.arquivos.get('/b/execucoes.jsonl'), 'verificador-seguranca', agora()), 1);
+  assert.equal(execucoesNaSemana(d.arquivos.get(join('/b', 'execucoes.jsonl')), 'verificador-seguranca', agora()), 1);
 });
 
 test('rodar: teto semanal atingido não roda', async () => {

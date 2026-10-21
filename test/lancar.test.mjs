@@ -9,7 +9,7 @@ import {
 import { executar, caminhoDoRegistro } from '../central/planos/marcar.mjs';
 
 const HOME = '/home/teste';
-const OPC = { home: HOME, planoArquivo: '/home/teste/planos/2026-10-20-login.md' };
+const OPC = { home: HOME, platform: 'linux', planoArquivo: '/home/teste/planos/2026-10-20-login.md' };
 const PAPEL = { modelo: 'claude-sonnet-5-5', esforco: 'medium', permissao: 'acceptEdits' };
 const ITEM = { id: 'P1', titulo: 'Corrigir login', repo: '~/Projects/meu-app', prompt: 'Corrija o login. Pronto = testes verdes.' };
 
@@ -66,14 +66,14 @@ test('validação: id, modelo, esforço, permissão, bypassPermissions e repo', 
   assert.throws(() => argvLocal({ ...ITEM, repo: '~/Projects/../.ssh' }, PAPEL, OPC), /fora das pastas/);
   assert.throws(() => argvLocal({ ...ITEM, repo: '~/Projects2/x' }, PAPEL, OPC), /fora das pastas/);
   assert.throws(() => argvLocal({ ...ITEM, prompt: '  ' }, PAPEL, OPC), /prompt vazio/);
-  assert.throws(() => argvLocal(ITEM, PAPEL, { home: HOME }), /planoArquivo é obrigatório/);
+  assert.throws(() => argvLocal(ITEM, PAPEL, { home: HOME, platform: 'linux' }), /planoArquivo é obrigatório/);
   assert.throws(() => argvLocal(ITEM, PAPEL, { ...OPC, planoArquivo: '/x/$(rm -rf ~).md' }), /shell/);
 });
 
 test('validarRepo aceita ~/Projects e subpastas, e raízes configuráveis', () => {
-  assert.equal(validarRepo('~/Projects/x', { home: HOME }), '/home/teste/Projects/x');
-  assert.equal(validarRepo('/home/teste/Projects', { home: HOME }), '/home/teste/Projects');
-  assert.equal(validarRepo('~/Projects/central-agentes', { home: HOME, raizes: ['~/Projects'] }),
+  assert.equal(validarRepo('~/Projects/x', { home: HOME, platform: 'linux' }), '/home/teste/Projects/x');
+  assert.equal(validarRepo('/home/teste/Projects', { home: HOME, platform: 'linux' }), '/home/teste/Projects');
+  assert.equal(validarRepo('~/Projects/central-agentes', { home: HOME, platform: 'linux', raizes: ['~/Projects'] }),
     '/home/teste/Projects/central-agentes');
 });
 
@@ -193,7 +193,7 @@ test('lerSaidaBg: formatos plausíveis e saída inesperada', () => {
 test('lancar --bg: chama o spawn sem shell, no cwd validado, e lê o id', async () => {
   const d = dubleSpawn({ stdout: 'Started background session abc123def\n' });
   const argv = argvLocal(ITEM, PAPEL, OPC);
-  const r = await lancar(argv, { spawn: d.spawn, cwd: '~/Projects/meu-app', home: HOME });
+  const r = await lancar(argv, { spawn: d.spawn, cwd: '~/Projects/meu-app', home: HOME, platform: 'linux' });
   assert.equal(r.ok, true);
   assert.equal(r.id, 'abc123def');
   assert.equal(d.chamadas.length, 1);
@@ -206,7 +206,7 @@ test('lancar --bg: chama o spawn sem shell, no cwd validado, e lê o id', async 
 test('lancar --cloud usa o spawnPty quando há, e lê id e URL', async () => {
   const comum = dubleSpawn({ stderr: 'Error: --cloud requires an interactive terminal.', codigo: 1 });
   const pty = dubleSpawn({ stdout: SAIDA_CLOUD });
-  const r = await lancar(argvNuvem(ITEM, OPC), { spawn: comum.spawn, spawnPty: pty.spawn, cwd: CWD, home: HOME });
+  const r = await lancar(argvNuvem(ITEM, OPC), { spawn: comum.spawn, spawnPty: pty.spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.equal(comum.chamadas.length, 0);
   assert.equal(pty.chamadas.length, 1);
   assert.equal(r.ok, true);
@@ -216,7 +216,7 @@ test('lancar --cloud usa o spawnPty quando há, e lê id e URL', async () => {
 
 test('lancar --cloud sem PTY: ok:false com motivo claro', async () => {
   const d = dubleSpawn({ stderr: 'Error: --cloud requires an interactive terminal.\n', codigo: 1 });
-  const r = await lancar(argvNuvem(ITEM, OPC), { spawn: d.spawn, cwd: CWD, home: HOME });
+  const r = await lancar(argvNuvem(ITEM, OPC), { spawn: d.spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.equal(r.ok, false);
   assert.match(r.motivo, /exige terminal interativo/);
   assert.match(r.saida, /requires an interactive terminal/);
@@ -224,36 +224,36 @@ test('lancar --cloud sem PTY: ok:false com motivo claro', async () => {
 
 test('lancar: mensagem para a nuvem lê o JSON de confirmação', async () => {
   const d = dubleSpawn({ stdout: '{"ok":true,"session_id":"session_01X","url":"https://claude.ai/code/session_01X"}' });
-  const r = await lancar(argvMensagemNuvem('session_01X', 'continua'), { spawn: d.spawn, cwd: CWD, home: HOME });
+  const r = await lancar(argvMensagemNuvem('session_01X', 'continua'), { spawn: d.spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.equal(r.ok, true);
   assert.equal(r.id, 'session_01X');
   const ruim = dubleSpawn({ stdout: 'nada' });
-  const r2 = await lancar(argvMensagemNuvem('session_01X', 'continua'), { spawn: ruim.spawn, cwd: CWD, home: HOME });
+  const r2 = await lancar(argvMensagemNuvem('session_01X', 'continua'), { spawn: ruim.spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.equal(r2.ok, false);
 });
 
 test('lancar: código de saída, erro de spawn, saída inesperada e timeout viram ok:false', async () => {
   const argv = argvLocal(ITEM, PAPEL, OPC);
-  const c1 = await lancar(argv, { spawn: dubleSpawn({ stderr: 'boom', codigo: 3 }).spawn, cwd: CWD, home: HOME });
+  const c1 = await lancar(argv, { spawn: dubleSpawn({ stderr: 'boom', codigo: 3 }).spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.equal(c1.ok, false);
   assert.match(c1.motivo, /código 3: boom/);
-  const c2 = await lancar(argv, { spawn: dubleSpawn({ erro: new Error('ENOENT') }).spawn, cwd: CWD, home: HOME });
+  const c2 = await lancar(argv, { spawn: dubleSpawn({ erro: new Error('ENOENT') }).spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.match(c2.motivo, /não foi possível iniciar o claude: ENOENT/);
-  const c3 = await lancar(argv, { spawn: dubleSpawn({ stdout: 'hmm' }).spawn, cwd: CWD, home: HOME });
+  const c3 = await lancar(argv, { spawn: dubleSpawn({ stdout: 'hmm' }).spawn, cwd: CWD, home: HOME, platform: 'linux' });
   assert.match(c3.motivo, /saída inesperada/);
-  const c4 = await lancar(argv, { spawn: dubleSpawn({ nunca: true }).spawn, cwd: CWD, home: HOME, timeoutMs: 20 });
+  const c4 = await lancar(argv, { spawn: dubleSpawn({ nunca: true }).spawn, cwd: CWD, home: HOME, platform: 'linux', timeoutMs: 20 });
   assert.match(c4.motivo, /não terminou/);
-  const c5 = await lancar(argv, { spawn: () => { throw new Error('sem permissão'); }, cwd: CWD, home: HOME });
+  const c5 = await lancar(argv, { spawn: () => { throw new Error('sem permissão'); }, cwd: CWD, home: HOME, platform: 'linux' });
   assert.match(c5.motivo, /sem permissão/);
 });
 
 test('lancar recusa antes de chamar o spawn: cwd fora, argv forjado, bypass, sem spawn', async () => {
   const d = dubleSpawn({ stdout: 'abc123def' });
   const argv = argvLocal(ITEM, PAPEL, OPC);
-  assert.match((await lancar(argv, { spawn: d.spawn, cwd: '/etc', home: HOME })).motivo, /fora das pastas/);
-  assert.match((await lancar(['rm', '-rf', '/'], { spawn: d.spawn, cwd: CWD, home: HOME })).motivo, /argv inválido/);
-  assert.match((await lancar(['claude', '--permission-mode', 'bypassPermissions', 'x'], { spawn: d.spawn, cwd: CWD, home: HOME })).motivo, /proibida/);
-  assert.match((await lancar(argv, { cwd: CWD, home: HOME })).motivo, /spawn não informado/);
+  assert.match((await lancar(argv, { spawn: d.spawn, cwd: '/etc', home: HOME, platform: 'linux' })).motivo, /fora das pastas/);
+  assert.match((await lancar(['rm', '-rf', '/'], { spawn: d.spawn, cwd: CWD, home: HOME, platform: 'linux' })).motivo, /argv inválido/);
+  assert.match((await lancar(['claude', '--permission-mode', 'bypassPermissions', 'x'], { spawn: d.spawn, cwd: CWD, home: HOME, platform: 'linux' })).motivo, /proibida/);
+  assert.match((await lancar(argv, { cwd: CWD, home: HOME, platform: 'linux' })).motivo, /spawn não informado/);
   assert.equal(d.chamadas.length, 0);
 });
 

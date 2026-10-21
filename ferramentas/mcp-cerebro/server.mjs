@@ -16,7 +16,7 @@ const VERSAO = '1.0.0';
 const LER_MAX = 4096;
 
 // Raízes de onde cerebro_arquivo pode ler conteúdo. Devem ser as mesmas do indexar.mjs.
-// Sobrescreva com CEREBRO_RAIZES (caminhos separados por ":"). Nota pessoal fora daqui: CEREBRO_VAULT.
+// Sobrescreva com CEREBRO_RAIZES (caminhos separados por ":" no Linux/macOS e por ";" no Windows). Nota pessoal fora daqui: CEREBRO_VAULT.
 function raizesPadrao() {
   const r = [
     process.env.AGENTIC_OS_PROJETOS || path.join(HOME, 'Projects'),
@@ -33,9 +33,10 @@ function raizesPadrao() {
   return r;
 }
 const RAIZES = process.env.CEREBRO_RAIZES
-  ? process.env.CEREBRO_RAIZES.split(':').filter(Boolean).map((p) => p.replace(/^~(?=\/|$)/, HOME))
+  ? process.env.CEREBRO_RAIZES.split(path.delimiter).filter(Boolean).map((p) => p.replace(/^~(?=[\\/]|$)/, HOME))
   : raizesPadrao();
-const SENSIVEL = /(secret|token|\.env|credential|senha|password|passwd|\.pem$|\.key$|id_rsa|\.config\/)/i;
+const SENSIVEL = /(secret|token|\.env|credential|senha|password|passwd|\.pem$|\.key$|id_rsa|\.config[\\/])/i;
+const WIN = process.platform === 'win32';
 
 // ---------- índice ----------
 let idx = null;        // { itens, norm[], porCaminho: Map, entrada: Map<id, id[]>, gerado }
@@ -76,7 +77,11 @@ function reais() {
   return raizesReais;
 }
 
-const dentro = (p, raiz) => p === raiz || p.startsWith(raiz + path.sep);
+// no Windows o sistema de arquivos não diferencia maiúscula: compara em minúsculas
+const dentro = (p, raiz) => {
+  if (WIN) { p = p.toLowerCase(); raiz = raiz.toLowerCase(); }
+  return p === raiz || p.startsWith(raiz.endsWith(path.sep) ? raiz : raiz + path.sep);
+};
 
 // Resolve o caminho pedido: aceita absoluto, ~/..., ou só o nome do arquivo
 // (se for único no índice). Devolve { real, item?, i? } ou lança erro.
@@ -84,17 +89,19 @@ function resolver(caminho) {
   const I = carregar();
   let c = String(caminho || '').trim();
   if (!c) throw new Error('caminho vazio');
-  if (c.startsWith('~/')) c = path.join(HOME, c.slice(2));
+  if (c.startsWith('~/') || (WIN && c.startsWith('~\\'))) c = path.join(HOME, c.slice(2));
   if (!path.isAbsolute(c)) {
-    const base = semAcento(c);
+    // nome do arquivo (ou pedaço final do caminho): compara com "/" nos dois lados, para valer também com "\\" no Windows
+    const base = semAcento(c).replace(/\\/g, '/');
     const hits = [];
-    I.itens.forEach((it, i) => { if (semAcento(it.p).endsWith('/' + base) || semAcento(it.p).endsWith('/' + base + '.md')) hits.push(i); });
+    I.itens.forEach((it, i) => { const p = semAcento(it.p).replace(/\\/g, '/'); if (p.endsWith('/' + base) || p.endsWith('/' + base + '.md')) hits.push(i); });
     if (hits.length === 1) c = I.itens[hits[0]].p;
     else if (hits.length > 1) throw new Error(`ambíguo (${hits.length}): ` + hits.slice(0, 5).map((i) => I.itens[i].p).join(' | '));
     else throw new Error('não está no índice; passe o caminho absoluto');
   }
   c = path.resolve(c);
   let i = I.porCaminho.get(c);
+  if (i === undefined && WIN) { const cl = c.toLowerCase(); I.itens.forEach((it, j) => { if (i === undefined && String(it.p).toLowerCase() === cl) i = j; }); }
   let real;
   try { real = fs.realpathSync(c); } catch { real = null; }
   if (real) {

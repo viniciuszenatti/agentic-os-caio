@@ -17,7 +17,7 @@ const LIMITE_TOTAL = 15000;
 const PREVIEW_MAX = 300;
 const LER_MAX = 64 * 1024; // lê no máx. 64 KB de cada arquivo
 
-const til = (p) => (p ? p.replace(/^~(?=\/|$)/, HOME) : p);
+const til = (p) => (p ? p.replace(/^~(?=[\\/]|$)/, HOME) : p); // ~/x ou ~\x (Windows)
 const ORIGENS = {
   projetos: til(process.env.AGENTIC_OS_PROJETOS) || path.join(HOME, 'Projects'),
   notas: til(process.env.CEREBRO_VAULT || process.env.NOTAS_DIR) || null,
@@ -37,7 +37,8 @@ const PULAR_DIR = new Set([
 ]);
 
 // Nada de segredo: nem conteúdo nem caminho.
-const SENSIVEL = /(secret|token|\.env|credential|senha|password|passwd|\.pem$|\.key$|id_rsa|\.config\/)/i;
+// separador "/" ou "\\" (Windows) no .config
+const SENSIVEL = /(secret|token|\.env|credential|senha|password|passwd|\.pem$|\.key$|id_rsa|\.config[\\/])/i;
 const ehSensivel = (p) => SENSIVEL.test(p);
 
 const itens = [];

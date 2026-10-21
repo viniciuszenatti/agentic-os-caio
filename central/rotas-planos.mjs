@@ -55,12 +55,15 @@ class Falta extends Error {
  *   dados:     pasta de papeis.json, score-pesos.json, score.jsonl, score-fontes.json, escala-*.json(l)
  *   home:      expande o "~" do repo dos itens
  */
-export function criarRotasPlanos({ mod = {}, fs, spawn, spawnPty, agora = () => Date.now(), dirs, marcador, raizes = ['~/Projects'], terminal = 'konsole' }) {
+export function criarRotasPlanos({ mod = {}, fs, spawn, spawnPty, agora = () => Date.now(), dirs, marcador, raizes = ['~/Projects'], terminal = 'konsole', argvTerminal }) {
+  // terminal que abre já dentro da sessão (claude attach <nome>); o server.mjs passa o do sistema (plataforma.mjs → comandoTerminal)
+  const terminalDe = argvTerminal ?? ((nome) => ({ cmd: terminal, args: ['-e', 'claude', 'attach', nome] }));
   const precisa = (nome) => { if (!mod[nome]) throw new Falta(nome); return mod[nome]; };
   const dado = (n) => path.join(dirs.dados, n);
   // registro.mjs e papeis.mjs usam a API de promessas do fs (await fs.readFile)
   const fsp = fs.promises ?? fs;
-  const expandir = (repo) => (typeof repo === 'string' && repo.startsWith('~') ? dirs.home + repo.slice(1) : repo);
+  // "~/x" (ou "~\\x" no Windows) → <home>/x com o separador do sistema
+  const expandir = (repo) => (typeof repo === 'string' && /^~([\\/]|$)/.test(repo) ? path.join(dirs.home, repo.slice(2)) : repo);
 
   // ---------- leitura ----------
   function lerJsonOuNada(arq) {
@@ -359,7 +362,8 @@ export function criarRotasPlanos({ mod = {}, fs, spawn, spawnPty, agora = () => 
     const nome = corpo?.nome;
     if (typeof nome !== 'string' || !RE_NOME_SESSAO.test(nome)) return erro(400, 'nome de sessão inválido');
     try {
-      const filho = spawn(terminal, ['-e', 'claude', 'attach', nome], { cwd: dirs.home, detached: true, stdio: 'ignore' });
+      const { cmd, args } = terminalDe(nome);
+      const filho = spawn(cmd, args, { cwd: dirs.home, detached: true, stdio: 'ignore' });
       filho.on?.('error', () => {});
       filho.unref?.();
     } catch (e) { return erro(502, `não abri o terminal: ${e.message}`); }

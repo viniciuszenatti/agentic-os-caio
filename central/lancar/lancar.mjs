@@ -29,6 +29,7 @@
  */
 import os from 'node:os';
 import path from 'node:path';
+import { pathDe, barrasNormais } from '../plataforma.mjs';
 
 // Espelho das listas fechadas do C4 (central/config/papeis.mjs, item N3).
 // Ficam aqui para o lançador validar sozinho; a integração (N7) pode passar a
@@ -69,21 +70,26 @@ function deLista(valor, lista, rotulo) {
   return valor;
 }
 
-function expandir(caminho, home) {
+function expandir(caminho, home, P) {
   if (caminho === '~') return home;
-  if (caminho.startsWith('~/')) return path.join(home, caminho.slice(2));
+  if (caminho.startsWith('~/') || (P === path.win32 && caminho.startsWith('~\\'))) return P.join(home, caminho.slice(2));
   return caminho;
 }
 
-/** Confere que `repo` fica dentro de uma das raízes (padrão `~/Projects`). Devolve o caminho absoluto. */
-export function validarRepo(repo, { home = os.homedir(), raizes = RAIZES_PADRAO } = {}) {
+/**
+ * Confere que `repo` fica dentro de uma das raízes (padrão `~/Projects`). Devolve o caminho absoluto.
+ * `platform` escolhe as regras de caminho (no Windows: "\\", letra de unidade, sem diferenciar maiúscula).
+ */
+export function validarRepo(repo, { home = os.homedir(), raizes = RAIZES_PADRAO, platform = process.platform } = {}) {
   if (typeof repo !== 'string' || !repo.trim() || repo.includes('\0')) {
     throw erro('repo ausente ou inválido');
   }
-  const abs = path.resolve(expandir(repo.trim(), home));
+  const P = pathDe(platform);
+  const abs = P.resolve(expandir(repo.trim(), home, P));
+  const igual = P === path.win32 ? (a) => a.toLowerCase() : (a) => a;
   for (const r of raizes) {
-    const raiz = path.resolve(expandir(r, home));
-    if (abs === raiz || abs.startsWith(raiz + path.sep)) return abs;
+    const raiz = P.resolve(expandir(r, home, P));
+    if (igual(abs) === igual(raiz) || igual(abs).startsWith(igual(raiz + P.sep))) return abs;
   }
   throw erro(`repo fora das pastas permitidas (${raizes.join(', ')}): ${repo}`);
 }
@@ -105,7 +111,7 @@ function validarSessao(id, re = RE_SESSAO) {
 export function nomeDaSessao(item, planoArquivo) {
   validarId(item.id);
   const base = planoArquivo
-    ? path.basename(String(planoArquivo)).replace(/\.md$/i, '')
+    ? String(planoArquivo).replace(/^.*[\\/]/, '').replace(/\.md$/i, '') // basename com / ou \\ (Windows)
     : 'plano';
   const slug = base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'plano';
@@ -122,7 +128,7 @@ export function nomeDaSessao(item, planoArquivo) {
  * - onde=nuvem|projects: a sessão não alcança a máquina, então o fim é marcado
  *   por commit + push na branch `plano/<id>` (a Central confere a branch/PR).
  */
-export function embrulhar(item, { planoArquivo, marcador = MARCADOR_PADRAO } = {}) {
+export function embrulhar(item, { planoArquivo, marcador = MARCADOR_PADRAO, platform = process.platform } = {}) {
   validarId(item?.id);
   if (typeof item.prompt !== 'string' || !item.prompt.trim()) throw erro(`prompt vazio no item ${item.id}`);
   const onde = deLista(item.onde ?? 'local', ONDES, 'onde');
@@ -131,6 +137,9 @@ export function embrulhar(item, { planoArquivo, marcador = MARCADOR_PADRAO } = {
     if (typeof planoArquivo !== 'string' || !planoArquivo.trim()) {
       throw erro('planoArquivo é obrigatório para onde=local (o marcar.mjs precisa dele)');
     }
+    // No Windows o caminho vem com "\\": vira "/" (o node aceita) para citar entre aspas sem escape de shell.
+    planoArquivo = barrasNormais(planoArquivo, platform);
+    marcador = barrasNormais(marcador, platform);
     if (RE_INSEGURO_EM_ASPAS.test(planoArquivo) || RE_INSEGURO_EM_ASPAS.test(marcador)) {
       throw erro('caminho do plano ou do marcador com caractere que o shell interpretaria');
     }
@@ -379,12 +388,12 @@ function validarArgv(argv) {
  *   `--cloud` de criação (a CLI recusa sem TTY);
  * - `cwd`: o repo do item, validado dentro de ~/Projects.
  */
-export async function lancar(argv, { spawn, spawnPty, cwd, home, raizes, timeoutMs = TIMEOUT_PADRAO } = {}) {
+export async function lancar(argv, { spawn, spawnPty, cwd, home, raizes, platform, timeoutMs = TIMEOUT_PADRAO } = {}) {
   let dir;
   try {
     validarArgv(argv);
     if (typeof spawn !== 'function') throw erro('spawn não informado');
-    dir = validarRepo(cwd, { home, raizes });
+    dir = validarRepo(cwd, { home, raizes, ...(platform ? { platform } : {}) });
   } catch (e) {
     return { ok: false, saida: '', motivo: e.message };
   }

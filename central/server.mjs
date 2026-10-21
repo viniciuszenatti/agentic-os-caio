@@ -9,6 +9,7 @@ import { execFile, spawn } from 'node:child_process';
 import { randomUUID, createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { criarRotasPlanos, carregarModulos } from './rotas-planos.mjs';
+import { ambienteFilho, comandoAbrir, comandoTerminal, dentroDe, ehWindows, indisponivel, pastaScratch, pidVivo, recursos, separarCaminhos, spawnComClaude } from './plataforma.mjs';
 
 function portaDoEnv(v) {
   if (v === undefined || v === '') return 4747;
@@ -19,27 +20,36 @@ function portaDoEnv(v) {
 const HOST = process.env.CENTRAL_HOST || '127.0.0.1';
 const PORT = portaDoEnv(process.env.CENTRAL_PORT);
 const HOME = process.env.CENTRAL_HOME || os.homedir();
-const CL = `${HOME}/.claude`;
+const PLAT = process.platform;
+const WIN = ehWindows(PLAT);
+const RECURSOS = recursos(PLAT);
+const CL = path.join(HOME, '.claude');
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // Dados da ferramenta (planos, líderes, verificadores, fila de respostas, token): ~/.claude/agentic-os por padrão.
-const BASE = process.env.AGENTIC_OS_DIR || `${CL}/agentic-os`;
+const BASE = process.env.AGENTIC_OS_DIR || path.join(CL, 'agentic-os');
 // Código irmão da Central no mesmo repo: ../cerebro e ../coletar.mjs.
 const RAIZ_REPO = path.dirname(AQUI);
 const CEREBRO = path.join(RAIZ_REPO, 'cerebro');
 const COLETOR = path.join(RAIZ_REPO, 'coletar.mjs');
-const SCRATCH = `/tmp/claude-${process.getuid?.() ?? 1000}/`;
+const SCRATCH = pastaScratch();
 const NOMES_HOST = [...new Set(['127.0.0.1', 'localhost', HOST])];
 const ORIGENS = new Set(NOMES_HOST.map((h) => `http://${h}:${PORT}`));
 const HOSTS = new Set(NOMES_HOST.map((h) => `${h}:${PORT}`));
 // Pastas que o botão "abrir" aceita (comparadas pelo realpath). NOTAS_DIR entra se existir.
-const RAIZES_ABRIR = [`${CL}/`, SCRATCH, `${RAIZ_REPO}/`, ...(process.env.NOTAS_DIR ? [path.resolve(process.env.NOTAS_DIR) + '/'] : [])];
+// No Windows a comparação ignora maiúsculas e aceita "\\" ou "/" (dentroDe, em plataforma.mjs).
+const RAIZES_ABRIR = [CL, SCRATCH, RAIZ_REPO, ...(process.env.NOTAS_DIR ? [path.resolve(process.env.NOTAS_DIR)] : [])];
+// realpath das raízes também: no Windows o %TEMP% pode vir em nome curto (RUNNER~1) e o realpath do arquivo, em nome longo
+const RAIZES_ABRIR_REAIS = RAIZES_ABRIR.map((r) => { try { return fs.realpathSync.native(r); } catch { return r; } });
 function realOuNada(p) { try { return fs.realpathSync(p); } catch { return null; } }
 function podeAbrir(real) {
   if (!real) return false;
-  return RAIZES_ABRIR.some((r) => real.startsWith(r));
+  return RAIZES_ABRIR.some((r) => dentroDe(real, r)) || RAIZES_ABRIR_REAIS.some((r) => dentroDe(real, r));
 }
 const LIMITE_CORPO = 8192; // cabe uma resposta de 2000 caracteres acentuados
-const ENV = { ...process.env, HOME, PATH: `${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin` };
+const ENV = ambienteFilho(process.env, HOME);
+// "claude" vira claude.exe (ou node + cli.js do npm) no Windows, sem shell; os outros comandos passam como estão.
+const spawnC = spawnComClaude(spawn, { env: ENV });
+const NODE = process.execPath; // o mesmo node que roda a Central (no Windows o PATH dos filhos pode não ter "node")
 
 // ---------- utilidades ----------
 function json(res, code, obj) {
@@ -65,7 +75,7 @@ function retrato() {
   if (cache.dado && Date.now() - cache.em < 30_000) return Promise.resolve(cache.dado);
   if (emVoo) return emVoo;
   emVoo = new Promise((ok) => {
-    execFile('node', [COLETOR], { env: ENV, timeout: 25_000, maxBuffer: 16 * 1024 * 1024 }, (err, out, errOut) => {
+    execFile(NODE, [COLETOR], { env: ENV, timeout: 25_000, maxBuffer: 16 * 1024 * 1024 }, (err, out, errOut) => {
       emVoo = null;
       if (err) return ok({ erro: `coletor falhou: ${rabo(errOut || err.message, 400)}`, anterior: cache.dado });
       try {
@@ -88,7 +98,9 @@ function registrar(acao) {
 function rodar(acao, cmd, args, timeoutMs, cwd = HOME) {
   const e = registrar(acao);
   let buf = '';
-  const p = spawn(cmd, args, { env: ENV, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+  let p;
+  try { p = spawnC(cmd, args, { env: ENV, cwd, stdio: ['ignore', 'pipe', 'pipe'] }); }
+  catch (err) { e.estado = 'falhou'; e.fim = Date.now(); e.saida = `[não iniciou: ${err.message}]`; return e; }
   const junta = (d) => { buf = rabo(buf + d.toString(), 8192); };
   p.stdout.on('data', junta);
   p.stderr.on('data', junta);
@@ -108,7 +120,7 @@ const rodando = (acao) => execucoes.find((e) => e.acao === acao && e.estado === 
 // ---------- deck ----------
 const MODELOS = new Set(['haiku', 'sonnet', 'opus']);
 const ESFORCOS = new Set(['low', 'medium', 'high']);
-const DECK_DIR = `${CL}/deck`;
+const DECK_DIR = path.join(CL, 'deck');
 const SCRIPT_LEITURA = 'mkdir -p "$5" && f="$5/$1-$(date +%Y-%m-%d_%H%M).md" && claude -p "$2" --model "$3" --effort "$4" --allowedTools Read Grep Glob > "$f" && echo "$(date -Iseconds) $1 modelo=$3 esforco=$4 arquivo=$f" >> "$5/runs.log" && echo "$f"';
 const SCRIPT_LIMPEZA = `mkdir -p "$5" && f="$5/$1-$(date +%Y-%m-%d_%H%M).md" && claude -p "$2" --model "$3" --effort "$4" --allowedTools "Bash(bash ${CL}/skills/limpeza/diagnostico.sh:*)" Read > "$f" && echo "$(date -Iseconds) $1 modelo=$3 esforco=$4 arquivo=$f" >> "$5/runs.log" && echo "$f"`;
 // Standup genérico: lê os planos e os diários dos líderes (sem tracker). Ligue aqui o seu tracker, se quiser.
@@ -116,26 +128,31 @@ const PROMPT_STANDUP = `Resuma a semana em pt-BR: planos em ${BASE}/planos (o .m
 
 // ---------- ações (lista fechada) ----------
 const ACOES = {
-  diagnostico: () => ({ cmd: 'bash', args: [`${CL}/skills/limpeza/diagnostico.sh`, '--rapido'], t: 5 * 60_000 }),
-  saude: () => {
-    const arq = `${CL}/limpeza/saude.mjs`;
-    if (!fs.existsSync(arq)) return { erro: `o medidor de saúde ainda não existe (${arq})`, code: 404 };
-    return { cmd: 'node', args: [arq], t: 2 * 60_000 };
+  diagnostico: () => {
+    if (!RECURSOS.diagnostico) return { erro: indisponivel('o diagnóstico da máquina usa bash, /proc e systemd'), code: 501 };
+    return { cmd: 'bash', args: [path.join(CL, 'skills', 'limpeza', 'diagnostico.sh'), '--rapido'], t: 5 * 60_000 };
   },
-  reindexar: () => ({ cmd: 'node', args: [`${CEREBRO}/indexar.mjs`], t: 3 * 60_000 }),
+  saude: () => {
+    const arq = path.join(CL, 'limpeza', 'saude.mjs');
+    if (!fs.existsSync(arq)) return { erro: `o medidor de saúde ainda não existe (${arq})`, code: 404 };
+    return { cmd: NODE, args: [arq], t: 2 * 60_000 };
+  },
+  reindexar: () => ({ cmd: NODE, args: [path.join(CEREBRO, 'indexar.mjs')], t: 3 * 60_000 }),
   'deck-standup': (c) => deck('standup', PROMPT_STANDUP, SCRIPT_LEITURA, c),
   'deck-limpeza': (c) => deck('limpeza', '/limpeza', SCRIPT_LIMPEZA, c),
 };
 // ---------- fase 3: modo build (script do outro agente; pode ainda não existir) ----------
-const MODO_BUILD = `${CL}/rotinas/modo-build.sh`;
+const MODO_BUILD = path.join(CL, 'rotinas', 'modo-build.sh');
 for (const modo of ['on', 'off']) {
   ACOES[`modo-build-${modo}`] = () => {
+    if (!RECURSOS.modoBuild) return { erro: indisponivel('o modo build pausa timers do systemd'), code: 501 };
     if (!fs.existsSync(MODO_BUILD)) return { erro: `o script do modo build ainda não existe (${MODO_BUILD})`, code: 404 };
     return { cmd: 'bash', args: [MODO_BUILD, modo], t: 60_000 };
   };
 }
 function modoBuild() {
   return new Promise((ok) => {
+    if (!RECURSOS.modoBuild) return ok({ ausente: true, ativo: false, indisponivel: true, erro: indisponivel('o modo build pausa timers do systemd') });
     if (!fs.existsSync(MODO_BUILD)) return ok({ ausente: true, ativo: false });
     execFile('bash', [MODO_BUILD, 'status'], { env: ENV, cwd: HOME, timeout: 10_000, maxBuffer: 256 * 1024 }, (err, out, errOut) => {
       const txt = String(out || '').trim();
@@ -151,8 +168,9 @@ function modoBuild() {
 }
 
 // ---------- fase 3: capacidade do PC (arquivo do outro agente) ----------
-const CAPACIDADE = `${CL}/rotinas/estado/capacidade.json`;
+const CAPACIDADE = path.join(CL, 'rotinas', 'estado', 'capacidade.json');
 function capacidade() {
+  if (!RECURSOS.capacidade) return { ausente: true, indisponivel: true, erro: indisponivel('a capacidade do PC é medida em /proc e /sys') };
   if (!fs.existsSync(CAPACIDADE)) return { ausente: true };
   const d = lerJson(CAPACIDADE);
   if (!d || typeof d !== 'object') return { ausente: true, erro: 'capacidade.json não é JSON válido' };
@@ -161,15 +179,15 @@ function capacidade() {
 
 // ---------- fase 5: arquivos de estado (só leitura, lista fechada) ----------
 // O nome vem da URL, mas só escolhe uma chave deste mapa: nenhum caminho do cliente vira leitura de disco.
-const ESTADO_DIR = `${CL}/rotinas/estado`;
+const ESTADO_DIR = path.join(CL, 'rotinas', 'estado');
 const ESTADOS = {
-  capacidade: `${ESTADO_DIR}/capacidade.json`,
-  'vigia-ci': `${ESTADO_DIR}/vigia-ci.json`,
-  'saude-rotinas': `${ESTADO_DIR}/saude-rotinas.json`,
-  'lembrete-commit': `${ESTADO_DIR}/lembrete-commit.json`,
-  'onde-parei': `${ESTADO_DIR}/onde-parei.json`,
-  cota: `${ESTADO_DIR}/cota.json`,
-  saude: `${CL}/limpeza/saude.json`,
+  capacidade: path.join(ESTADO_DIR, 'capacidade.json'),
+  'vigia-ci': path.join(ESTADO_DIR, 'vigia-ci.json'),
+  'saude-rotinas': path.join(ESTADO_DIR, 'saude-rotinas.json'),
+  'lembrete-commit': path.join(ESTADO_DIR, 'lembrete-commit.json'),
+  'onde-parei': path.join(ESTADO_DIR, 'onde-parei.json'),
+  cota: path.join(ESTADO_DIR, 'cota.json'),
+  saude: path.join(CL, 'limpeza', 'saude.json'),
 };
 const LIMITE_ESTADO = 2 * 1024 * 1024;
 // "fora há N min": o saude.json não guarda histórico; a Central lembra (em memória) a 1ª medição em que cada alvo apareceu fora.
@@ -196,7 +214,7 @@ function lerEstado(nome) {
 }
 
 // ---------- fase 3: pergunte ao cérebro ----------
-const PERGUNTAS = `${DECK_DIR}/perguntas`;
+const PERGUNTAS = path.join(DECK_DIR, 'perguntas');
 const PREFIXO_PERGUNTA = `Responda em pt-BR, em até 8 linhas, citando os caminhos dos arquivos usados. Use o índice ${CEREBRO}/indice.json para achar os arquivos relevantes e leia só os necessários (no máximo 6). Só leitura. Pergunta: `;
 const MODELOS_PERGUNTA = new Set(['haiku', 'sonnet']);
 const dois = (n) => String(n).padStart(2, '0');
@@ -207,9 +225,10 @@ function isoLocal(d) {
 function caminhosCitados(txt) {
   const vistos = new Set(), out = [];
   const homeRe = HOME.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
-  for (const m of String(txt).matchAll(new RegExp(`(?:~|${homeRe})/[^\\s\`'"()<>\\[\\]{},;|*]+`, 'g'))) {
+  // "/" ou "\\" depois do ~ ou do HOME (no Windows o HOME vem como C:\\Users\\voce)
+  for (const m of String(txt).matchAll(new RegExp(`(?:~|${homeRe})[\\\\/][^\\s\`'"()<>\\[\\]{},;|*]+`, 'g' + (WIN ? 'i' : '')))) {
     const bruto = m[0].replace(/[.:!?]+$/, '').replace(/:\d+(-\d+)?$/, '');
-    const abs = bruto.startsWith('~') ? HOME + bruto.slice(1) : bruto;
+    const abs = bruto.startsWith('~') ? path.join(HOME, bruto.slice(2)) : bruto;
     if (vistos.has(abs)) continue;
     vistos.add(abs);
     const real = realOuNada(abs);
@@ -232,7 +251,9 @@ function perguntar(corpo, res) {
   // argv fixo: a pergunta é UM argumento do processo, nunca passa por shell.
   const args = ['-p', PREFIXO_PERGUNTA + pergunta, '--model', modelo, '--effort', 'low', '--allowedTools', 'Read', 'Grep', 'Glob'];
   let out = '', err = '';
-  const p = spawn('claude', args, { env: ENV, cwd: HOME, stdio: ['ignore', 'pipe', 'pipe'] });
+  let p;
+  try { p = spawnC('claude', args, { env: ENV, cwd: HOME, stdio: ['ignore', 'pipe', 'pipe'] }); }
+  catch (x) { e.estado = 'falhou'; e.fim = Date.now(); e.saida = `[não iniciou: ${x.message}]`; return json(res, 202, { execucao: e.id, acao: 'perguntar' }); }
   p.stdout.on('data', (d) => { out = (out + d.toString()).slice(-32_768); });
   p.stderr.on('data', (d) => { err = rabo(err + d.toString(), 4096); });
   const t = setTimeout(() => { err += '\n[tempo esgotado: 5 min]'; p.kill('SIGTERM'); }, 5 * 60_000);
@@ -262,17 +283,28 @@ function deck(id, prompt, script, corpo) {
   const modelo = corpo?.modelo ?? 'haiku';
   const esforco = corpo?.esforco ?? 'low';
   if (!MODELOS.has(modelo) || !ESFORCOS.has(esforco)) return { erro: 'modelo ou esforço fora da lista', code: 400 };
+  if (!RECURSOS.deckHeadless) return { erro: indisponivel(`o deck "${id}" grava a saída por bash; rode a skill numa sessão do Claude`), code: 501 };
   return { cmd: 'bash', args: ['-c', script, '_', id, prompt, modelo, esforco, DECK_DIR], t: 20 * 60_000 };
 }
 
 function abrir(corpo, res) {
   const bruto = corpo?.caminho;
-  if (typeof bruto !== 'string' || !bruto.startsWith('/') || bruto.includes('\0')) return json(res, 400, { erro: 'caminho inválido' });
+  if (typeof bruto !== 'string' || !path.isAbsolute(bruto) || bruto.includes('\0') || (WIN && bruto.startsWith('\\\\'))) return json(res, 400, { erro: 'caminho inválido' });
   let real;
   try { real = fs.realpathSync(bruto); } catch { return json(res, 404, { erro: 'arquivo não existe' }); }
   if (!podeAbrir(real)) return json(res, 403, { erro: 'caminho fora das pastas permitidas' });
-  execFile('setsid', ['-f', 'xdg-open', real], { env: { ...ENV, DISPLAY: process.env.DISPLAY || ':0' }, timeout: 10_000 }, (err) => {
-    if (err) return json(res, 500, { erro: `xdg-open falhou: ${err.message}` });
+  const { cmd, args } = comandoAbrir(real, PLAT);
+  if (WIN) {
+    // explorer.exe abre no programa padrão e devolve código 1 mesmo quando dá certo: só o erro de início conta
+    try {
+      const p = spawn(cmd, args, { env: ENV, detached: true, stdio: 'ignore', windowsHide: false });
+      p.on('error', () => {});
+      p.unref();
+    } catch (e) { return json(res, 500, { erro: `${cmd} falhou: ${e.message}` }); }
+    return json(res, 200, { ok: true, caminho: real });
+  }
+  execFile(cmd, args, { env: { ...ENV, DISPLAY: process.env.DISPLAY || ':0' }, timeout: 10_000 }, (err) => {
+    if (err) return json(res, 500, { erro: `${args.includes('xdg-open') ? 'xdg-open' : cmd} falhou: ${err.message}` });
     json(res, 200, { ok: true, caminho: real });
   });
 }
@@ -332,7 +364,7 @@ function curta(s, n = 260) {
 function acharPlugin(nome) {
   const [, sk] = nome.split(':');
   if (!sk) return null;
-  const raiz = `${CL}/plugins/cache`;
+  const raiz = path.join(CL, 'plugins', 'cache');
   const achados = [];
   const andar = (d, prof) => {
     if (prof > 5) return;
@@ -351,7 +383,7 @@ function acharPlugin(nome) {
 }
 function itemAnel(nome, usos) {
   let caminho = null, tipo = 'skill', origem = 'sua';
-  const sk = `${CL}/skills/${nome}/SKILL.md`, ag = `${CL}/agents/${nome}.md`;
+  const sk = path.join(CL, 'skills', nome, 'SKILL.md'), ag = path.join(CL, 'agents', `${nome}.md`);
   if (fs.existsSync(sk)) caminho = sk;
   else if (fs.existsSync(ag)) { caminho = ag; tipo = 'agente'; origem = 'agente'; }
   else if (nome.includes(':')) { caminho = acharPlugin(nome); origem = 'plugin · ' + nome.split(':')[0]; }
@@ -365,7 +397,7 @@ function itemAnel(nome, usos) {
 }
 let cacheAnel = { em: 0, ctx: 0, dado: null };
 function anel() {
-  const ctxArq = `${CL}/limpeza/contexto.json`;
+  const ctxArq = path.join(CL, 'limpeza', 'contexto.json');
   let ctxM = 0; try { ctxM = fs.statSync(ctxArq).mtimeMs; } catch {}
   if (cacheAnel.dado && cacheAnel.ctx === ctxM && Date.now() - cacheAnel.em < 10 * 60_000) return cacheAnel.dado;
   const ctx = lerJson(ctxArq);
@@ -414,8 +446,8 @@ function busca(q) {
 }
 
 // ---------- sessões: ler, fechar, responder ----------
-const SESSOES = `${CL}/sessions`;
-const vivo = (pid) => Number.isInteger(pid) && pid > 1 && fs.existsSync(`/proc/${pid}`);
+const SESSOES = path.join(CL, 'sessions');
+const vivo = (pid) => pidVivo(pid, { platform: PLAT });
 function lerSessoes() {
   const out = [];
   let fs_ = []; try { fs_ = fs.readdirSync(SESSOES).filter((f) => f.endsWith('.json')); } catch {}
@@ -423,7 +455,7 @@ function lerSessoes() {
   return out;
 }
 const DIA_MS = 86_400_000;
-function fecharSessao(corpo, res) {
+async function fecharSessao(corpo, res) {
   const sid = corpo?.sessionId;
   if (typeof sid !== 'string' || !/^[0-9a-f-]{36}$/.test(sid)) return json(res, 400, { erro: 'sessionId inválido' });
   const s = lerSessoes().find((x) => x.sessionId === sid);
@@ -433,16 +465,24 @@ function fecharSessao(corpo, res) {
   if (Date.now() - desde < DIA_MS) return json(res, 409, { erro: 'sessão parada há menos de 24 h' });
   const pid = s.pid;
   if (!vivo(pid) || pid === process.pid) return json(res, 410, { erro: 'processo da sessão já não existe' });
-  let cmd = '', stat = '';
-  try { cmd = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\0/g, ' '); stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8'); } catch {}
-  if (!/claude/.test(cmd)) return json(res, 409, { erro: 'o pid não é um processo do claude' });
-  const inicio = stat.slice(stat.lastIndexOf(')') + 2).split(' ')[19];
-  if (s.procStart && String(s.procStart) !== inicio) return json(res, 409, { erro: 'o pid foi reaproveitado por outro processo' });
+  if (PLAT === 'linux') {
+    let cmd = '', stat = '';
+    try { cmd = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\0/g, ' '); stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8'); } catch {}
+    if (!/claude/.test(cmd)) return json(res, 409, { erro: 'o pid não é um processo do claude' });
+    const inicio = stat.slice(stat.lastIndexOf(')') + 2).split(' ')[19];
+    if (s.procStart && String(s.procStart) !== inicio) return json(res, 409, { erro: 'o pid foi reaproveitado por outro processo' });
+  } else if (WIN) {
+    // sem /proc: o tasklist diz o nome da imagem do pid (argv fixo, o pid é número validado)
+    const nome = await new Promise((ok) => execFile('tasklist.exe', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], { timeout: 10_000, windowsHide: true }, (err, out) => ok(err ? '' : String(out))));
+    if (!/claude|node/i.test(nome)) return json(res, 409, { erro: 'o pid não é um processo do claude' });
+  } else {
+    return json(res, 501, { erro: indisponivel('fechar sessão confere o processo por /proc') });
+  }
   try { process.kill(pid, 'SIGTERM'); } catch (e) { return json(res, 500, { erro: `não consegui encerrar: ${e.message}` }); }
   cache.em = 0;
   json(res, 200, { ok: true, nome: s.name ?? String(pid), pid });
 }
-const FILA = `${BASE}/fila-respostas`;
+const FILA = path.join(BASE, 'fila-respostas');
 function responder(corpo, res) {
   const sid = corpo?.sessionId, texto = corpo?.texto;
   if (typeof sid !== 'string' || !/^[0-9a-f-]{36}$/.test(sid)) return json(res, 400, { erro: 'sessionId inválido' });
@@ -468,16 +508,16 @@ function respostas() {
       lista.push({ arquivo: f, estado: est, sessionId: d.sessionId, nome: d.nome, texto: String(d.texto || '').slice(0, 160), em: d.em ?? Number(f.split('-')[0]), erro: d.erro });
     }
   };
-  ler(FILA, 'fila'); ler(`${FILA}/enviadas`, 'enviada'); ler(`${FILA}/erros`, 'erro');
+  ler(FILA, 'fila'); ler(path.join(FILA, 'enviadas'), 'enviada'); ler(path.join(FILA, 'erros'), 'erro');
   lista.sort((a, b) => b.em - a.em);
   return { itens: lista.slice(0, 30) };
 }
 
 // ---------- linha do tempo de hoje ----------
-const PROJETOS = `${CL}/projects`;
+const PROJETOS = path.join(CL, 'projects');
 // pasta de projeto do Claude Code: o cwd com "/" virando "-" (ex.: -home-voce-Projects-app)
 const PREFIXO_PROJ = new RegExp(`^${HOME.replace(/[^A-Za-z0-9]/g, '-')}-?`);
-const RELATORIOS = `${CL}/doc-de-sessao`;
+const RELATORIOS = path.join(CL, 'doc-de-sessao');
 function pedaco(arq, inicio, tam) {
   const fd = fs.openSync(arq, 'r');
   try { const b = Buffer.alloc(tam); const n = fs.readSync(fd, b, 0, tam, inicio); return b.subarray(0, n).toString('utf8'); } finally { fs.closeSync(fd); }
@@ -536,7 +576,7 @@ function hoje() {
 }
 
 // ---------- layout do painel (compartilhado entre os aparelhos que abrem a Central) ----------
-const LAYOUT = `${AQUI}/layout.json`;
+const LAYOUT = path.join(AQUI, 'layout.json');
 const CARTOES = new Set(['apps', 'calendario', 'noticias', 'precisa', 'revisao', 'escala', 'deck', 'rotinas']);
 const TAMANHOS = new Set(['compacto', 'normal', 'alto']);
 const LARGURA_MIN = 240, LARGURA_MAX = 560;
@@ -605,8 +645,8 @@ function lerLayout() {
 }
 
 // ---------- fase 6: caixa de revisão (lista fechada de pastas, só leitura) ----------
-const REVISAO_DIR = `${BASE}/revisao`;
-const DECISOES = `${REVISAO_DIR}/decisoes.jsonl`;
+const REVISAO_DIR = path.join(BASE, 'revisao');
+const DECISOES = path.join(REVISAO_DIR, 'decisoes.jsonl');
 const SETE_DIAS = 7 * DIA_MS;
 function mdsDe(dir, filtro) {
   let fs_ = []; try { fs_ = fs.readdirSync(dir, { withFileTypes: true }); } catch { return []; }
@@ -624,9 +664,9 @@ function fontesRevisao() {
   for (const a of mdsDe(DECK_DIR)) add(a, 'deck', true);
   for (const a of mdsDe(PERGUNTAS)) add(a, 'pergunta', true);
   // relatórios .md que as suas rotinas gravarem em ~/.claude/rotinas/estado/ (lista fechada; acrescente o seu nome aqui)
-  for (const n of ['noticias-ia']) add(`${ESTADO_DIR}/${n}.md`, 'rotina', false);
-  add(`${CL}/limpeza/analise-ultima.md`, 'limpeza', false);
-  for (const a of mdsDe(`${CL}/rotinas/fechamentos`, (n) => n.startsWith(hojeTx))) add(a, 'fechamento', false);
+  for (const n of ['noticias-ia']) add(path.join(ESTADO_DIR, `${n}.md`), 'rotina', false);
+  add(path.join(CL, 'limpeza', 'analise-ultima.md'), 'limpeza', false);
+  for (const a of mdsDe(path.join(CL, 'rotinas', 'fechamentos'), (n) => n.startsWith(hojeTx))) add(a, 'fechamento', false);
   return out;
 }
 // id = arquivo + versão: se a rotina regravar o arquivo, ele volta para a caixa como item novo.
@@ -673,7 +713,7 @@ function revisar(corpo, res) {
 }
 
 // ---------- fase 6: notícias de IA (arquivo do outro agente; pode não existir) ----------
-const NOTICIAS = `${ESTADO_DIR}/noticias-ia.json`;
+const NOTICIAS = path.join(ESTADO_DIR, 'noticias-ia.json');
 const txt = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
 function noticias() {
   let st; try { st = fs.statSync(NOTICIAS); } catch { return { ausente: true }; }
@@ -695,7 +735,7 @@ function noticias() {
 }
 
 // ---------- fase 6: saída do dia ----------
-const FECHAMENTOS = `${CL}/rotinas/fechamentos`;
+const FECHAMENTOS = path.join(CL, 'rotinas', 'fechamentos');
 function fechamento() {
   let fs_ = []; try { fs_ = fs.readdirSync(FECHAMENTOS).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort(); } catch {}
   if (!fs_.length) return { ausente: true };
@@ -711,28 +751,31 @@ function fechamento() {
 }
 const SCRIPT_ENCERRAR = 'systemctl --user start rotina-fechamento-do-dia.service; s=$?; echo "fechamento do dia: saída $s"; bash "$1" on --ate 08:00 || exit $?; exit $s';
 ACOES['encerrar-dia'] = () => {
+  if (!RECURSOS.rotinasSystemd) return { erro: indisponivel('encerrar o dia liga um serviço do systemd e o modo build'), code: 501 };
   if (!fs.existsSync(MODO_BUILD)) return { erro: `o script do modo build não existe (${MODO_BUILD})`, code: 404 };
   return { cmd: 'bash', args: ['-c', SCRIPT_ENCERRAR, '_', MODO_BUILD], t: 4 * 60_000 };
 };
 
 // ---------- fase 6: motor Gemini no deck (script do outro agente; pode não existir) ----------
-const GEMINI = `${CL}/rotinas/gemini-rodar.sh`;
+const GEMINI = path.join(CL, 'rotinas', 'gemini-rodar.sh');
 const TAREFAS_GEMINI = new Set(['standup', 'resumo-noticias']);
 ACOES['deck-gemini'] = (c) => {
   const tarefa = c?.tarefa;
   if (typeof tarefa !== 'string' || !TAREFAS_GEMINI.has(tarefa)) return { erro: 'tarefa fora da lista (standup|resumo-noticias)', code: 400 };
+  if (WIN) return { erro: indisponivel('o motor Gemini do deck é um script bash'), code: 501 };
   if (!fs.existsSync(GEMINI)) return { erro: `o script do Gemini ainda não existe (${GEMINI})`, code: 404 };
   return { cmd: 'bash', args: [GEMINI, tarefa], t: 10 * 60_000, tarefa };
 };
 
 // ---------- token dos POST (docs/arquitetura.md) ----------
 // Gerado a cada início, gravado com modo 600 (um arquivo por porta) e injetado na página como <meta name="central-token">.
-export const TOKEN_ARQ = `${BASE}/central-${PORT}.token`;
+export const TOKEN_ARQ = path.join(BASE, `central-${PORT}.token`);
 function gravarToken(arq, token) {
   fs.mkdirSync(path.dirname(arq), { recursive: true });
   const tmp = path.join(path.dirname(arq), `.${path.basename(arq)}.${process.pid}.tmp`);
+  // modo 600 no Linux/macOS; no Windows o chmod só mexe no "somente leitura" e o arquivo fica protegido pela ACL do perfil do usuário
   fs.writeFileSync(tmp, token + '\n', { mode: 0o600 });
-  fs.chmodSync(tmp, 0o600);
+  if (!WIN) fs.chmodSync(tmp, 0o600);
   fs.renameSync(tmp, arq);
 }
 function tokenConfere(recebido, token) {
@@ -742,7 +785,7 @@ function tokenConfere(recebido, token) {
 function servirPagina(res, token) {
   fs.readFile(path.join(AQUI, 'index.html'), 'utf8', (err, html) => {
     if (err) return json(res, 404, { erro: 'não encontrado' });
-    const meta = `<meta name="central-token" content="${token}">\n<meta name="central-home" content="${HOME.replace(/[&"<>]/g, '')}">`;
+    const meta = `<meta name="central-token" content="${token}">\n<meta name="central-home" content="${HOME.replace(/[&"<>]/g, '')}">\n<meta name="central-plataforma" content="${PLAT}">`;
     // a página traz <meta name="central-token" content=""> vazio: substitui; sem ele, injeta após <head>
     const VAZIO = /<meta name="central-token" content="">/;
     const com = VAZIO.test(html) ? html.replace(VAZIO, meta)
@@ -760,7 +803,7 @@ const alvosEscala = () => Object.keys(lerJson(path.join(AQUI, 'escala-pesos.json
 ACOES['escala-varrer'] = (c) => {
   const alvo = c?.alvo;
   if (typeof alvo !== 'string' || !alvosEscala().includes(alvo)) return { erro: `alvo fora da lista (${alvosEscala().join('|')})`, code: 400 };
-  return { cmd: 'node', args: [path.join(ESCALA_DIR, 'verificador.mjs'), '--alvo', alvo], t: 5 * 60_000, tarefa: alvo };
+  return { cmd: NODE, args: [path.join(ESCALA_DIR, 'verificador.mjs'), '--alvo', alvo], t: 5 * 60_000, tarefa: alvo };
 };
 function escala() {
   const cfg = lerJson(path.join(AQUI, 'escala-pesos.json'));
@@ -832,7 +875,7 @@ export function criarServidor({ token, rotas }) {
       const id = m[1];
       if (rotas?.temAcao(id)) { const r = await rotas.post(id, corpo); return json(res, r.code, r.corpo); }
       if (id === 'abrir') return abrir(corpo, res);
-      if (id === 'fechar-sessao') return fecharSessao(corpo, res);
+      if (id === 'fechar-sessao') return await fecharSessao(corpo, res);
       if (id === 'responder') return responder(corpo, res);
       if (id === 'perguntar') return perguntar(corpo, res);
       if (id === 'salvar-layout') return salvarLayout(corpo, res);
@@ -858,10 +901,11 @@ export function criarServidor({ token, rotas }) {
       return servir(res, CEREBRO, rel);
     }
     if (p === '/api/retrato') return json(res, 200, await retrato());
-    if (p === '/api/saude') return json(res, 200, lerJson(`${CL}/limpeza/saude.json`) ?? { ausente: true });
-    if (p === '/api/contexto') return json(res, 200, lerJson(`${CL}/limpeza/contexto.json`) ?? { ausente: true });
+    if (p === '/api/plataforma') return json(res, 200, RECURSOS);
+    if (p === '/api/saude') return json(res, 200, lerJson(path.join(CL, 'limpeza', 'saude.json')) ?? { ausente: true });
+    if (p === '/api/contexto') return json(res, 200, lerJson(path.join(CL, 'limpeza', 'contexto.json')) ?? { ausente: true });
     if (p === '/api/limpeza') {
-      const dir = `${CL}/limpeza/relatorios`;
+      const dir = path.join(CL, 'limpeza', 'relatorios');
       let arqs = [];
       try { arqs = fs.readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => ({ f, t: fs.statSync(path.join(dir, f)).mtimeMs })); } catch {}
       if (!arqs.length) return json(res, 200, { ausente: true });
@@ -871,7 +915,7 @@ export function criarServidor({ token, rotas }) {
       const alertas = texto.split('\n').filter((l) => l.startsWith('- ⚠️')).map((l) => l.replace(/^- ⚠️\s*/, '').trim());
       return json(res, 200, { arquivo: arqs[0].f, caminho, em: arqs[0].t, alertas, titulo: (texto.match(/^# (.+)$/m) || [])[1] || arqs[0].f });
     }
-    if (p === '/api/deck') return json(res, 200, { deck: ultimasLinhas(`${CL}/deck/runs.log`, 10), limpeza: ultimasLinhas(`${CL}/limpeza/runs.log`, 10) });
+    if (p === '/api/deck') return json(res, 200, { deck: ultimasLinhas(path.join(DECK_DIR, 'runs.log'), 10), limpeza: ultimasLinhas(path.join(CL, 'limpeza', 'runs.log'), 10) });
     if (p === '/api/execucoes') return json(res, 200, { execucoes });
     if (p === '/api/nos') return json(res, 200, nos());
     if (p === '/api/anel') return json(res, 200, anel());
@@ -914,9 +958,10 @@ export function criarServidor({ token, rotas }) {
 export const CONFIG = { HOST, PORT, HOME, CL, AQUI };
 
 // Pastas das rotas de planos: planos e registros em ~/.claude/agentic-os/planos; papéis, pesos e históricos ao lado do server.
-export const DIRS_PLANOS = { planos: `${BASE}/planos`, dados: AQUI, home: HOME, lideres: `${BASE}/lideres`, verificadores: `${BASE}/verificadores` };
-// Raízes onde os repos dos itens de plano podem ficar (CENTRAL_RAIZES="~/Projects:~/code"). Padrão: ~/Projects.
-export const RAIZES_REPOS = (process.env.CENTRAL_RAIZES || '~/Projects').split(':').map((x) => x.trim()).filter(Boolean);
+export const DIRS_PLANOS = { planos: path.join(BASE, 'planos'), dados: AQUI, home: HOME, lideres: path.join(BASE, 'lideres'), verificadores: path.join(BASE, 'verificadores') };
+// Raízes onde os repos dos itens de plano podem ficar. Padrão: ~/Projects.
+// Separador da lista: ":" no Linux/macOS (CENTRAL_RAIZES="~/Projects:~/code"), ";" no Windows (CENTRAL_RAIZES="~/Projects;D:\\code").
+export const RAIZES_REPOS = separarCaminhos(process.env.CENTRAL_RAIZES || '~/Projects', PLAT);
 
 const ehPrincipal = (() => { try { return fs.realpathSync(process.argv[1] || '') === fileURLToPath(import.meta.url); } catch { return false; } })();
 if (ehPrincipal) {
@@ -926,12 +971,16 @@ if (ehPrincipal) {
   const faltam = Object.entries(mod).filter(([, v]) => !v).map(([k]) => k);
   if (faltam.length) console.error(`módulos ainda ausentes (rotas respondem 503): ${faltam.join(', ')}`);
   // os processos das rotas novas (claude e o conferidor de push) herdam o mesmo PATH/HOME das ações antigas
-  const spawnCentral = (cmd, args, o = {}) => spawn(cmd, args, { cwd: HOME, ...o, env: ENV });
-  // o claude --cloud exige terminal: roda pelo helper de pseudo-terminal, argv sem shell
+  const spawnCentral = (cmd, args, o = {}) => spawnC(cmd, args, { cwd: HOME, ...o, env: ENV });
+  // o claude --cloud exige terminal: roda pelo helper de pseudo-terminal, argv sem shell.
+  // No Windows não há o pty do Python: o item "nuvem" falha com o motivo (local e projects continuam).
   const PTY = fileURLToPath(new URL('./lancar/pty.py', import.meta.url));
-  const spawnPty = (cmd, args, o = {}) => spawnCentral('python3', ['-I', PTY, '120', '--', cmd, ...args], o);
+  const spawnPty = RECURSOS.nuvem
+    ? (cmd, args, o = {}) => spawnCentral('python3', ['-I', PTY, '120', '--', cmd, ...args], o)
+    : () => { throw new Error(indisponivel('claude --cloud pela Central precisa de pseudo-terminal; use onde=local ou projects')); };
   const marcador = fileURLToPath(new URL('./planos/marcar.mjs', import.meta.url));
-  const rotas = criarRotasPlanos({ mod, fs, spawn: spawnCentral, spawnPty, marcador, dirs: DIRS_PLANOS, raizes: RAIZES_REPOS, terminal: process.env.CENTRAL_TERMINAL || 'konsole' });
+  const argvTerminal = (nome) => comandoTerminal(['claude', 'attach', nome], { platform: PLAT, terminal: process.env.CENTRAL_TERMINAL });
+  const rotas = criarRotasPlanos({ mod, fs, spawn: spawnCentral, spawnPty, marcador, dirs: DIRS_PLANOS, raizes: RAIZES_REPOS, argvTerminal });
   // disparo automático dos itens que destravam, só em planos aprovados por você (a cada 30 s)
   setInterval(() => { rotas.tick().then((f) => f.length && console.log(`disparo automático: ${JSON.stringify(f).slice(0, 300)}`)).catch(() => {}); }, 30_000).unref();
   criarServidor({ token, rotas }).listen(PORT, HOST, () => console.log(`Central em http://${HOST}:${PORT}`));

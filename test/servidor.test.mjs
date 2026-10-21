@@ -413,7 +413,8 @@ test('node central/server.mjs sobe na porta do ambiente, grava o token 600 e ser
     });
     const arq = path.join(home, '.claude', 'agentic-os', `central-${p2}.token`);
     const st = fs.statSync(arq);
-    assert.equal(st.mode & 0o777, 0o600);
+    // no Windows o modo POSIX não existe (o arquivo fica protegido pela ACL do perfil)
+    if (process.platform !== 'win32') assert.equal(st.mode & 0o777, 0o600);
     const token = fs.readFileSync(arq, 'utf8').trim();
     assert.match(token, /^[0-9a-f]{64}$/);
     const pag = await (await fetch(`http://127.0.0.1:${p2}/`)).text();

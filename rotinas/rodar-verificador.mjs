@@ -12,6 +12,7 @@ import { promises as fsReal } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnComClaude } from '../central/plataforma.mjs';
 
 // Lista fechada: nome do verificador → teto de execuções por semana, teto de gasto por execução
 // (US$, passado a --max-budget-usd) e o pedido feito ao agente.
@@ -85,7 +86,7 @@ export function argvVerificador(nome) {
 }
 
 /** Decide e roda. Tudo que toca o mundo entra por injeção. -> { rodou, motivo, codigo? } */
-export async function rodar(nome, { fs = fsReal, spawn = spawnReal, agora = () => new Date(), base = join(homedir(), '.claude', 'agentic-os', 'rotinas') } = {}) {
+export async function rodar(nome, { fs = fsReal, spawn = spawnComClaude(spawnReal), agora = () => new Date(), base = join(homedir(), '.claude', 'agentic-os', 'rotinas') } = {}) {
   const v = VERIFICADORES[nome];
   if (!v) return { rodou: false, motivo: `verificador desconhecido: ${nome}` };
 
@@ -104,7 +105,8 @@ export async function rodar(nome, { fs = fsReal, spawn = spawnReal, agora = () =
 
   const [cmd, ...args] = argvVerificador(nome);
   const codigo = await new Promise((resolve) => {
-    const p = spawn(cmd, args, { stdio: 'inherit' });
+    let p;
+    try { p = spawn(cmd, args, { stdio: 'inherit' }); } catch { return resolve(127); }
     p.on('error', () => resolve(127));
     p.on('close', (c) => resolve(c ?? 1));
   });

@@ -3,10 +3,11 @@
 // Lê só arquivos locais e imprime um JSON: sessões vivas, relatórios, artefatos, rotinas e notas.
 // Não escreve nada em lugar nenhum.
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join, dirname, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 import { homedir } from 'node:os'
+import { pidVivo, pastaScratch, recursos } from './central/plataforma.mjs'
 
 const HOME = homedir()
 const SESSOES = join(HOME, '.claude/sessions')
@@ -19,8 +20,9 @@ const LIMITE_TRANSCRIPT = 24 * 1024 * 1024
 const DIA = 86_400_000
 const agora = Date.now()
 
+// Linux: /proc/<pid>; Windows/macOS: process.kill(pid, 0)
 function vivo(pid) {
-  return existsSync(`/proc/${pid}`)
+  return pidVivo(pid)
 }
 
 function sessoes() {
@@ -186,7 +188,7 @@ function notas() {
       const p = join(dir, it.name)
       if (it.isDirectory()) andar(p, prof + 1)
       else if (it.name.endsWith('.md')) {
-        try { notas.push({ nota: p.replace(NOTAS + '/', '').replace(/\.md$/, ''), mtime: statSync(p).mtimeMs }) } catch {}
+        try { notas.push({ nota: relative(NOTAS, p).split(sep).join('/').replace(/\.md$/, ''), mtime: statSync(p).mtimeMs }) } catch {}
       }
     }
   }
@@ -210,6 +212,7 @@ function contexto() {
 // Rotinas agendadas: timers do systemd de usuário definidos em
 // ~/.config/systemd/user, com próximo disparo e resultado da última execução. Só leitura.
 function rotinas() {
+  if (!recursos().rotinasSystemd) return null // sem systemd (Windows/macOS): o cartão mostra "sem rotinas"
   const dir = join(HOME, '.config/systemd/user')
   let timers
   try {
@@ -236,7 +239,7 @@ function rotinas() {
 
 // Artefatos que os agentes fizeram nos últimos 3 dias:
 // scratchpads das sessões, relatórios da /limpeza e o segundo cérebro. Só lista, não abre.
-const SCRATCH = `/tmp/claude-${process.getuid?.() ?? 1000}`
+const SCRATCH = pastaScratch()
 const EXT_ARTEFATO = /\.(html|md|pdf|png|pptx|docx|xlsx|svg|gif|mp4)$/i
 function artefatos() {
   const achados = []
@@ -271,7 +274,7 @@ function artefatos() {
   // Da limpeza, só o relatório mais novo — senão ele toma a lista inteira.
   let viuLimpeza = false
   const uteis = achados.filter(a => {
-    if (!a.caminho.includes('/limpeza/relatorios/')) return true
+    if (!a.caminho.split(sep).join('/').includes('/limpeza/relatorios/')) return true
     if (viuLimpeza) return false
     return (viuLimpeza = true)
   })
@@ -310,7 +313,10 @@ function standup() {
       if (st.mtimeMs < meiaNoite || st.size < 4096) continue
       let texto
       try { texto = lerFim(arq) } catch { continue }
-      const cwd = texto.match(/"cwd":"([^"]+)"/)?.[1] ?? ''
+      // o cwd vem escapado em JSON (no Windows, "C:\\\\Users\\\\voce")
+      const cwdBruto = texto.match(/"cwd":"((?:[^"\\]|\\.)+)"/)?.[1] ?? ''
+      let cwd = cwdBruto
+      try { cwd = JSON.parse(`"${cwdBruto}"`) } catch {}
       const msgs = ultimasMensagens(texto, 100_000)
       const pedidos = msgs.filter(d => d.type === 'user' && blocos(d).some(b => b.type === 'text' && !b.text.startsWith('<')))
       const { titulo, relatorio } = daConversa(arq, 'idle')
