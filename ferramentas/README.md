@@ -11,7 +11,7 @@ sem dependências npm, sem API paga. Feito para Linux com systemd de usuário.
 | `rotinas/` | `~/.claude/rotinas/` | scripts das rotinas, statusline e hooks; gravam `~/.claude/rotinas/estado/<nome>.json` | sim (a Central lê o estado) |
 | `limpeza/` | `~/.claude/limpeza/` | saúde dos ambientes (`saude.mjs` + `alvos.json`) e auditoria de contexto | recomendado |
 | `systemd/` | `~/.config/systemd/user/` | timers das rotinas, da limpeza, do reindexador e o serviço da Central | sim, os que você usar |
-| `skills/` | `~/.claude/skills/` | `limpeza`, `pesquisa-rapida`, `velocidade-site`, `performance`, `core-web-vitals` | opcional, uma a uma |
+| `skills/` | `~/.claude/skills/` | `limpeza`, `pesquisa-rapida`, `velocidade-site`, `performance`, `core-web-vitals`, `changelog` (notas de versão do git, sem API paga) | opcional, uma a uma |
 | `agents/` | `~/.claude/agents/` | `velocidade-site` (laudo de PageSpeed) | opcional |
 | `mcp-cerebro/` | `~/.local/share/mcp-servers/cerebro/` | MCP de busca no índice do segundo cérebro (ver o README dele) | opcional |
 
