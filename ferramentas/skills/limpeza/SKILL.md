@@ -7,6 +7,8 @@ description: Diagnóstico e manutenção da máquina Linux onde o Claude Code ro
 
 O script faz o trabalho; você decide e explica. **Diagnóstico é só leitura. Remédio só com o OK do usuário no turno.**
 
+**Só Linux** (bash, `/proc`, `/sys`, systemd, thermald). No Windows a Central e o mod avisam que o diagnóstico é indisponível; não tente adaptar os comandos.
+
 ## Passos
 1. Rodar exatamente `bash ~/.claude/skills/limpeza/diagnostico.sh --rapido` (16 s). Sem `--rapido`, mede caches
    (≈1 min): usar quando o assunto for disco. Pasta dos repositórios/bancadas: variável `AGENTIC_OS_PROJETOS`

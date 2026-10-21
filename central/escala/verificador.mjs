@@ -36,8 +36,14 @@ export function lerConfig() {
 const git = (repo, ...a) => spawnSync('git', ['-C', repo, ...a], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 function extrair(repo, ref, sub, destino) {
   fs.mkdirSync(destino, { recursive: true });
-  const r = spawnSync('bash', ['-c', 'git -C "$1" archive "$2" ${3:+"$3"} | tar -x -C "$4"', '_', repo, ref, sub || '', destino], { encoding: 'utf8' });
-  if (r.status !== 0) throw new Error(`git archive falhou em ${repo}: ${r.stderr.trim()}`);
+  // sem shell nem pipe: git archive grava um .tar e o tar (Linux, ou o tar.exe do Windows 10+) extrai.
+  // O tar roda na pasta do .tar com nome relativo: "C:\\…" no -f seria lido como host remoto pelo tar GNU do Git Bash.
+  const tarArq = `${destino}.tar`;
+  const r = spawnSync('git', ['-C', repo, 'archive', '--format=tar', '-o', tarArq, ref, ...(sub ? [sub] : [])], { encoding: 'utf8' });
+  if (r.status !== 0) { fs.rmSync(tarArq, { force: true }); throw new Error(`git archive falhou em ${repo}: ${(r.stderr || r.error?.message || '').trim()}`); }
+  const x = spawnSync('tar', ['-x', '-f', path.basename(tarArq), '-C', destino], { encoding: 'utf8', cwd: path.dirname(tarArq) });
+  fs.rmSync(tarArq, { force: true });
+  if (x.status !== 0) throw new Error(`tar falhou ao extrair ${repo}: ${(x.stderr || x.error?.message || '').trim()}`);
 }
 function lerPasta(dir, filtro) {
   const out = [];
