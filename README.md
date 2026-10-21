@@ -15,8 +15,10 @@ rodando só na sua máquina (127.0.0.1).
 | Modo plano | `central/planos/`, `central/lancar/` | Plano em markdown → você aprova na Central → cada item vira `claude --bg` (local), `claude --cloud` (nuvem) ou texto para o Claude Projects |
 | Cérebro | `cerebro/` + `ferramentas/mcp-cerebro/` | Indexa seus repos, memórias, skills e rotinas; mapa visual em `/cerebro/` e MCP `cerebro_buscar` para as sessões acharem arquivo sem grep |
 | Mod do Claude Code | `mod/` | Plugin `painel-escritorio`: painel com sessões, subagentes, checklist, deck, limpeza; entrega no terminal as respostas que você escreve na Central |
-| Skills | `ferramentas/skills/` | `limpeza`, `calibrate`, `personalise`, `pesquisa-rapida`, `velocidade-site`, `performance`, `core-web-vitals` (+ agente `velocidade-site`) |
+| Skills | `ferramentas/skills/` | `limpeza`, `pesquisa-rapida`, `velocidade-site`, `performance`, `core-web-vitals` (+ agente `velocidade-site`) |
 | Rotinas, hooks, timers | `ferramentas/rotinas/`, `ferramentas/systemd/`, `rotinas/` | Capacidade do PC, onde parei, lembrete de commit, vigia de CI, statusline com cota, trava de checkout entre sessões, linha do tempo; timers do systemd |
+
+As skills `calibrate` e `personalise`, que a Central também reconhece, não vêm aqui porque o repositório original não tem licença. Instale direto da fonte: https://github.com/robonuggets/skills
 
 Arquitetura e formato do plano: `docs/arquitetura.md`. Rotas da Central: `central/README.md`.
 Ferramentas soltas: `ferramentas/README.md`. Verificadores agendados: `rotinas/README.md`.
