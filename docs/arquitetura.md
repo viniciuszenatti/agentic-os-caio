@@ -23,7 +23,9 @@ systemd --user ──timers──> ferramentas/rotinas/*.mjs, cerebro/indexar.mj
 - Dados que a Central cria ali dentro (fora do git): `planos/`, `lideres/`, `verificadores/`,
   `fila-respostas/`, `revisao/`, `central-<porta>.token`, `central/papeis.json`, `central/layout.json`,
   `central/score*.json(l)`, `central/escala*.json(l)`, `central/nuvem-repos.json`, `cerebro/indice.json`.
-- Repos que os planos podem tocar: `~/Projects` por padrão (`CENTRAL_RAIZES="~/Projects:~/code"`).
+- Repos que os planos podem tocar: `~/Projects` por padrão (`CENTRAL_RAIZES="~/Projects:~/code"`; no Windows a lista usa `;`).
+- Linux e Windows: tudo que muda de um sistema para o outro passa por `central/plataforma.mjs`, que recebe o
+  `platform` por parâmetro (os testes rodam os dois sistemas em qualquer máquina). O CI testa os dois.
 
 ## Fluxo de um plano
 

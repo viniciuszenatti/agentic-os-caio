@@ -6,14 +6,17 @@ Tela de comando local do Agentic OS: http://127.0.0.1:4747
 - `index.html` — a página (CSS/JS inline, fontes locais Inter e JetBrains Mono, sem CDN). É lida a cada
   pedido: editou, recarregue a página. Editou o servidor: reinicie o processo.
 - Variáveis: `CENTRAL_PORT` (4747), `CENTRAL_HOST` (127.0.0.1), `CENTRAL_HOME` (home do usuário),
-  `AGENTIC_OS_DIR` (`~/.claude/agentic-os`), `CENTRAL_RAIZES` (`~/Projects`), `CENTRAL_TERMINAL` (`konsole`),
-  `NOTAS_DIR` (pasta de notas, opcional).
+  `AGENTIC_OS_DIR` (`~/.claude/agentic-os`), `CENTRAL_RAIZES` (`~/Projects`; lista com `:` no Linux e `;` no Windows),
+  `CENTRAL_TERMINAL` (`konsole` no Linux, `wt.exe` no Windows), `NOTAS_DIR` (pasta de notas, opcional).
+- Diferenças de sistema ficam em `plataforma.mjs` (abrir, terminal, pid vivo, `claude.exe`, o que é indisponível).
+  No Windows, capacidade, diagnóstico, modo build, encerrar o dia, deck headless e itens `nuvem` respondem
+  501 "indisponível no Windows: …" em vez de quebrar.
 - Serviço (opcional): `ferramentas/systemd/agentic-os-central.service`.
 
 ## Leitura (GET)
 
 `/api/retrato` (coletar.mjs, cache 30 s) · `/api/saude` · `/api/contexto` · `/api/limpeza` · `/api/deck` ·
-`/api/execucoes` · `/cerebro/` · `/api/nos` (amostra do índice do cérebro) · `/api/anel` (skills e agentes) ·
+`/api/execucoes` · `/api/plataforma` (sistema e o que existe nele) · `/cerebro/` · `/api/nos` (amostra do índice do cérebro) · `/api/anel` (skills e agentes) ·
 `/api/busca?q=` · `/api/hoje` (linha do tempo das sessões de hoje) · `/api/respostas` · `/api/capacidade` ·
 `/api/modo-build` · `/api/layout` · `/api/revisao` · `/api/noticias` · `/api/fechamento` · `/api/gemini` ·
 `/api/escala` · `/api/estado/<nome>` (lista fechada: `capacidade · vigia-ci · saude-rotinas · lembrete-commit · onde-parei · cota · saude`).

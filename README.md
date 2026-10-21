@@ -1,10 +1,12 @@
 # Agentic OS
 
-Caio, este é um "sistema operacional" local para trabalhar com vários agentes do Claude Code ao mesmo
+[![testes](https://github.com/viniciuszenatti/agentic-os-caio/actions/workflows/test.yml/badge.svg)](https://github.com/viniciuszenatti/agentic-os-caio/actions/workflows/test.yml)
+
+Um "sistema operacional" local para trabalhar com vários agentes do Claude Code ao mesmo
 tempo: uma tela de comando no navegador (a **Central**), um orquestrador que transforma conversa em plano,
 líderes por área, verificadores que medem o projeto, um índice de busca dos seus arquivos (o **cérebro**),
 um mod para o Claude Code e um conjunto de rotinas e skills. Tudo em Node puro, sem dependências npm,
-rodando só na sua máquina (127.0.0.1).
+rodando só na sua máquina (127.0.0.1). O núcleo roda no Linux e no Windows 10/11 (o CI testa os dois a cada push).
 
 ## O que vem dentro
 
@@ -23,14 +25,41 @@ As skills `calibrate` e `personalise`, que a Central também reconhece, não vê
 Arquitetura e formato do plano: `docs/arquitetura.md`. Rotas da Central: `central/README.md`.
 Ferramentas soltas: `ferramentas/README.md`. Verificadores agendados: `rotinas/README.md`.
 
+## Funciona em
+
+O CI (`.github/workflows/test.yml`) roda `npm test`, um teste de fumaça (sobe a Central, confere as rotas,
+roda o indexador e conversa com o MCP do cérebro) e, no Windows, o `install.ps1` numa pasta vazia,
+em `ubuntu-latest` e `windows-latest`. macOS não tem CI: os caminhos são POSIX, mas nada foi testado lá.
+
+| Peça | Linux | Windows 10/11 | macOS |
+|---|---|---|---|
+| Central (página, planos, papéis, score, escala, busca, revisão, respostas) | funciona | funciona | não testado |
+| Modo plano: item `local` (`claude --bg`) e `projects` | funciona | funciona (*) | não testado |
+| Modo plano: item `nuvem` (`claude --cloud`) | funciona (precisa de `python3`) | indisponível: a Central responde o motivo | não testado |
+| Botão "abrir" / "abrir terminal" | `xdg-open` / `konsole` | `explorer.exe` / Windows Terminal (`wt.exe`) | `open` / Terminal |
+| Cérebro (`cerebro/indexar.mjs`) e MCP do cérebro | funciona | funciona | não testado |
+| Mod `painel-escritorio` (painel, respostas da Central, abrir, 📌 guardar) | funciona | funciona (teste do mod com ambiente Windows simulado) | não testado |
+| Capacidade do PC (`/proc`, `/sys`) | funciona | indisponível (o cartão diz por quê) | não |
+| Diagnóstico e skill `limpeza` (`diagnostico.sh`, thermald) | funciona | indisponível | não |
+| Modo build, "encerrar o dia" | funciona (systemd) | indisponível | não |
+| Deck headless (`/standup`, `/limpeza` pelo botão) | funciona (bash) | indisponível: rode a skill numa sessão | não testado |
+| Timers e serviço (`ferramentas/systemd/`, `rotinas/*.timer`) | funciona | não: use o Agendador de Tarefas (abaixo) | não |
+| Rotinas soltas (`ferramentas/rotinas/*.mjs`, statusline, hooks) | funciona | não testado (Node + git; sem `notify-send`) | não testado |
+| `install.sh` / `install.ps1` | `install.sh` | `install.ps1` (testado no CI) | `install.sh` |
+
+(*) Testado no CI com o `claude` simulado: o runner não tem Claude logado, então nenhum `claude --bg` de
+verdade rodou no Windows. No Windows a Central acha o `claude.exe` no `PATH`; se só houver o `claude.cmd`
+do npm, ela roda o `cli.js` do pacote com o próprio node, porque um `.cmd` exigiria shell.
+
 ## Pré-requisitos
 
-- **Obrigatório:** Node 22+, Claude Code CLI (`claude`) logado, Linux (testado em Fedora; precisa de `/proc`).
-- **Opcional:** systemd de usuário (timers e serviço da Central; sem ele, suba a Central à mão),
+- **Obrigatório:** Node 22+ e o Claude Code CLI (`claude`) logado. Linux (testado em Fedora) ou Windows 10/11.
+- **Opcional no Linux:** systemd de usuário (timers e serviço da Central; sem ele, suba a Central à mão),
   `gh` logado (vigia de CI e trava da nuvem), `jq`, `notify-send`, `xdg-open` (botão "abrir"),
   `konsole` ou outro terminal (`CENTRAL_TERMINAL=gnome-terminal`, botão "abrir terminal"), `python3` (só para `claude --cloud`, que exige pseudo-terminal).
+- **Opcional no Windows:** Windows Terminal (`wt.exe`, botão "abrir terminal"; outro com `CENTRAL_TERMINAL`), `git` e `gh` no `PATH`.
 
-## Instalação
+## Instalação no Linux
 
 ```bash
 cd agentic-os-caio
@@ -53,7 +82,7 @@ Sem `install.sh`: copie à mão pela tabela acima (`cp -r`).
 
 Depois, passo a passo:
 
-1. **Testes:** `cd ~/.claude/agentic-os && npm test`.
+1. **Testes:** `cd ~/.claude/agentic-os && npm test` (e `node test/fumaca.mjs`, que sobe a Central na porta 4799 com um HOME temporário).
 2. **Índice do cérebro:** `node ~/.claude/agentic-os/cerebro/indexar.mjs`. Ele lê `~/Projects`
    (`AGENTIC_OS_PROJETOS` troca), `~/.claude/skills`, as memórias de `~/.claude/projects/*/memory`, os timers
    e, se você tiver, uma pasta de notas (`CEREBRO_VAULT` ou `NOTAS_DIR`).
@@ -77,6 +106,52 @@ Depois, passo a passo:
    - Verificadores: troque `https://dev.exemplo.com` e `~/Projects/meu-app` nos `~/.claude/agents/verificador-*.md`.
    - Líderes: copie `lider-exemplo.md` para `~/.claude/agents/lider-<area>.md` e preencha.
    - Planos podem tocar só repos dentro de `~/Projects` (`CENTRAL_RAIZES="~/Projects:~/code"` amplia).
+
+## Instalação no Windows
+
+No PowerShell (5.1 ou 7), dentro da pasta do repo:
+
+```powershell
+cd agentic-os-caio
+powershell -ExecutionPolicy Bypass -File install.ps1 -DryRun   # mostra o que vai copiar, sem escrever nada
+powershell -ExecutionPolicy Bypass -File install.ps1           # copia; arquivo diferente no destino vira .bak-<data> antes
+```
+
+O `install.ps1` faz o mesmo que o `install.sh` (só copia, `.bak` antes de sobrescrever, rodar de novo não
+muda nada), com estes destinos em `%USERPROFILE%`: `.claude\agentic-os\` (o repo; `AGENTIC_OS_DIR` troca),
+`.claude\agents\`, `.claude\skills\`, `.claude\rotinas\`, `.claude\limpeza\` e
+`.local\share\mcp-servers\cerebro\`. As units do systemd não são copiadas.
+
+Depois, passo a passo:
+
+1. **Testes:** `cd $HOME\.claude\agentic-os; npm test`.
+2. **Índice do cérebro:** `node $HOME\.claude\agentic-os\cerebro\indexar.mjs` (lê `%USERPROFILE%\Projects`; `AGENTIC_OS_PROJETOS` troca).
+3. **Subir a Central:** `node $HOME\.claude\agentic-os\central\server.mjs` e abra http://127.0.0.1:4747.
+   Porta diferente: `$env:CENTRAL_PORT=4800` antes do comando. A página avisa o que fica indisponível no Windows
+   (também em `GET /api/plataforma`).
+4. **Token:** igual ao Linux, em `%USERPROFILE%\.claude\agentic-os\central-<porta>.token`. No Windows não existe
+   modo 600: o arquivo fica protegido pela permissão da sua pasta de usuário.
+5. **MCP do cérebro:** `claude mcp add --scope user cerebro -- node "$HOME\.local\share\mcp-servers\cerebro\server.mjs"`.
+6. **Mod:** `claude plugin marketplace add "$HOME\.claude\agentic-os\mod"; claude plugin install painel-escritorio@agentic-os`.
+7. **Repos dos planos:** a lista de `CENTRAL_RAIZES` usa `;` no Windows: `$env:CENTRAL_RAIZES="~/Projects;D:\code"`.
+   O prompt de cada item cita os caminhos com `/` (o node aceita), para nenhum `\` virar escape de shell.
+
+### Windows: Agendador de Tarefas (opcional)
+
+Não há systemd no Windows. Se quiser que a Central suba sozinha no login e o cérebro reindexe todo dia,
+crie as tarefas à mão (nada disso é automático, e nenhuma delas chama IA):
+
+```powershell
+$node = (Get-Command node).Source
+$os = "$HOME\.claude\agentic-os"
+schtasks /Create /TN "AgenticOS\Central" /SC ONLOGON /TR "`"$node`" `"$os\central\server.mjs`""
+schtasks /Create /TN "AgenticOS\Cerebro" /SC DAILY /ST 03:00 /TR "`"$node`" `"$os\cerebro\indexar.mjs`""
+schtasks /Query /TN "AgenticOS\Central"     # conferir
+schtasks /Delete /TN "AgenticOS\Central" /F # desfazer
+```
+
+Os verificadores (`rotinas/rodar-verificador.mjs <nome>`) também podem virar tarefa, mas **gastam cota do
+plano Claude**: só crie se quiser pagar por isso, e o teto semanal continua valendo.
 
 ## Usar
 

@@ -851,6 +851,10 @@ const P = {
 };
 // home de quem roda a Central: o servidor injeta <meta name="central-home">
 const HOME_DIR = document.querySelector('meta[name="central-home"]')?.content || '';
+// sistema de quem roda a Central (win32, linux…): no Windows algumas peças ficam indisponíveis (GET /api/plataforma)
+const PLATAFORMA = document.querySelector('meta[name="central-plataforma"]')?.content || '';
+// "~/…" no lugar do HOME, com "/" ou "\" (Windows)
+const curtoHome = (c) => { const s = String(c || ''); return HOME_DIR && (s.startsWith(HOME_DIR + '/') || s.startsWith(HOME_DIR + '\\')) ? '~/' + s.slice(HOME_DIR.length + 1).replace(/\\/g, '/') : s; };
 const ic = (n, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${P[n] || P.raio}</svg>`;
 document.querySelectorAll('[data-ic]').forEach((el) => { el.innerHTML = ic(el.dataset.ic); });
 
@@ -1380,7 +1384,7 @@ async function buscar(q) {
   let d; try { d = await pega(`/api/busca?q=${encodeURIComponent(q.slice(0, 100))}`); } catch (e) { if (seq === buscaSeq) $('busca-res').innerHTML = `<li class="vazio">${esc(e.message)}</li>`; return; }
   if (seq !== buscaSeq || !$('busca-res')) return;
   $('busca-res').innerHTML = d.resultados.length ? d.resultados.map((r) => `<li>${r.abrivel
-    ? `<button class="r" data-abrir="${esc(r.caminho)}"><b>${esc(r.titulo)}</b><span class="area">${esc(r.area)}</span><small>${esc(r.caminho.replace(HOME_DIR + '/', '~/'))}${r.desc ? ` — ${esc(r.desc)}` : ''}</small></button>`
+    ? `<button class="r" data-abrir="${esc(r.caminho)}"><b>${esc(r.titulo)}</b><span class="area">${esc(r.area)}</span><small>${esc(curtoHome(r.caminho))}${r.desc ? ` — ${esc(r.desc)}` : ''}</small></button>`
     : `<div class="r"><b>${esc(r.titulo)}</b><span class="area">${esc(r.area)}</span><small>${esc(r.desc)}</small><div class="fora"><code>${esc(r.caminho)}</code><button class="mini" data-copiar="${esc(r.caminho)}">Copiar</button></div></div>`}</li>`).join('')
     + (d.total > d.resultados.length ? `<li class="vazio">mostrando 30 de ${d.total}</li>` : '')
     : '<li class="vazio">Nada encontrado.</li>';
@@ -1455,7 +1459,7 @@ function mostrarResposta(e) {
   $('perg-area').innerHTML = `<p class="mono" style="font-size:11px">“${esc(e.pergunta || '')}”</p>
     <div class="perg-meta"><span>${e.estado === 'ok' ? 'respondida' : '<b style="color:var(--erro)">falhou</b>'}</span><span>modelo <b>${esc(e.modelo || '')}</b></span><span>tempo <b>${seg} s</b></span><span>arquivos citados <b>${(e.caminhos || []).length}</b> (${abriveis} abríveis)</span></div>
     <div class="resposta">${e.estado === 'ok' ? textoComLinks(e.resposta || '', e.caminhos) : esc(e.saida || 'sem saída')}</div>
-    ${(e.caminhos || []).some((c) => c.existe && !c.abrivel) ? `<div class="rot">Citados fora das pastas que a Central abre</div><ul class="res">${e.caminhos.filter((c) => c.existe && !c.abrivel).map((c) => `<li><div class="fora"><code>${esc(c.caminho.replace(HOME_DIR + '/', '~/'))}</code><button class="mini" data-copiar="${esc(c.caminho)}">Copiar</button></div></li>`).join('')}</ul>` : ''}`;
+    ${(e.caminhos || []).some((c) => c.existe && !c.abrivel) ? `<div class="rot">Citados fora das pastas que a Central abre</div><ul class="res">${e.caminhos.filter((c) => c.existe && !c.abrivel).map((c) => `<li><div class="fora"><code>${esc(curtoHome(c.caminho))}</code><button class="mini" data-copiar="${esc(c.caminho)}">Copiar</button></div></li>`).join('')}</ul>` : ''}`;
   $('perg-bts').innerHTML = `${e.arquivo ? `<button class="bt" data-abrir="${esc(e.arquivo)}">Abrir .md salvo</button>` : ''}<button class="bt borda" data-perg-nova>Nova pergunta</button><button class="bt" data-m-fechar>Fechar</button>`;
 }
 document.addEventListener('click', (ev) => {
@@ -3325,6 +3329,7 @@ function carregarAnel() {
 carregarAnel();
 aplicarFoco();
 carregar(); verExecs(); verRespostas(); animar();
+if (PLATAFORMA === 'win32') aviso('Central no Windows: capacidade do PC, diagnóstico, modo build, rotinas do systemd, deck headless e itens na nuvem ficam indisponíveis. Planos locais, cérebro e respostas funcionam.');
 setInterval(carregar, 60000);
 setInterval(carregarAnel, 600000);
 carregarPlanos();
