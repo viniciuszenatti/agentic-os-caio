@@ -31,3 +31,22 @@ jobs:
           FUMACA_PORTA: 4799
       - name: MCP do cérebro de ponta a ponta
         run: node ferramentas/mcp-cerebro/teste.mjs
+      - name: instalador do Windows (install.ps1 numa pasta vazia)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $casa = Join-Path $env:RUNNER_TEMP 'casa-instalador'
+          New-Item -ItemType Directory -Force -Path $casa | Out-Null
+          ./install.ps1 -DryRun -Casa $casa
+          if (Test-Path (Join-Path $casa '.claude')) { throw 'o -DryRun escreveu em disco' }
+          ./install.ps1 -Casa $casa
+          $saida = ./install.ps1 -Casa $casa 6>&1 | Out-String
+          Write-Host $saida
+          if ($saida -notmatch 'Placar: 0 copiados') { throw 'rodar de novo deveria copiar 0 arquivos' }
+          $destino = Join-Path $casa '.claude\agentic-os'
+          if (-not (Test-Path (Join-Path $destino 'central\server.mjs'))) { throw 'central não foi copiada' }
+          if (-not (Test-Path (Join-Path $casa '.local\share\mcp-servers\cerebro\server.mjs'))) { throw 'MCP não foi copiado' }
+          Push-Location $destino
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw 'npm test falhou na cópia instalada' }
+          Pop-Location

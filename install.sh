@@ -49,7 +49,7 @@ echo "== 1/3 repo -> $DESTINO"
 if [ -d "$DESTINO" ] && [ "$(cd "$AQUI" && pwd -P)" = "$(cd "$DESTINO" && pwd -P)" ]; then
   echo "(rodando de dentro do destino: nada a copiar)"
 else
-  for item in central cerebro mod rotinas agentes docs test coletar.mjs package.json CLAUDE.md README.md install.sh .gitignore; do
+  for item in central cerebro mod rotinas agentes docs test coletar.mjs package.json CLAUDE.md README.md install.sh install.ps1 .gitignore .gitattributes; do
     if [ -d "$AQUI/$item" ]; then copia_pasta "$AQUI/$item" "$DESTINO/$item"; elif [ -f "$AQUI/$item" ]; then copia "$AQUI/$item" "$DESTINO/$item"; fi
   done
 fi
